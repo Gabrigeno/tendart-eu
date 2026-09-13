@@ -1,73 +1,84 @@
+import Hero3D from '@/components/landing/Hero3D';
+import PunkSection from '@/components/landing/PunkSection';
+import { PHOTOS, type SectionKey } from '@/components/landing/photos';
 import ElectricButton from '@/components/ElectricButton';
-import { Marquee } from '@/components/Marquee';
-import { TypeAnimation } from 'react-type-animation';
+
+const SECTIONS: { key: SectionKey; title: string; text: string; accent: string }[] = [
+  {
+    key: 'chi-siamo',
+    title: 'Chi siamo',
+    text: 'Tendart è un collettivo di promozione artistica. Mostre, eventi, concerti: facciamo spazio a chi ha qualcosa da dire.',
+    accent: '#00f5d4',
+  },
+  {
+    key: 'mostre',
+    title: 'Mostre',
+    text: 'Esposizioni indipendenti, spazi non convenzionali, artisti emergenti.',
+    accent: '#ff0054',
+  },
+  {
+    key: 'eventi',
+    title: 'Eventi',
+    text: 'Serate, performance, incontri. Dove succede qualcosa, ci siamo.',
+    accent: '#8cff00',
+  },
+  {
+    key: 'concerti',
+    title: 'Concerti',
+    text: 'Live, rumore, palchi veri. La musica come la vogliamo noi.',
+    accent: '#00f5d4',
+  },
+];
 
 export default function Landing() {
   return (
-    <div className="w-full min-h-screen bg-[#00f5d4] text-black relative overflow-hidden">
-      {/* pattern geometrico di fondo */}
-      <div className="absolute inset-0 grid grid-cols-6 grid-rows-6 ">
-        <div className="bg-[#ff0054] col-span-2 row-span-3 border-2 border-black"></div>
-        <div className="bg-[#8cff00] col-start-5 row-start-3 row-span-3 border-2 border-black"></div>
-      </div>
-      {/* Wrapper verticale per testo + bottone */}
-      <div className="flex flex-col h-screen justify-center md:justify-center md:items-start items-center pl-4 md:pl-24 gap-6">
-        <div className=' flex flex-wrap '>
-        <TypeAnimation
-          sequence={[
-            'Benvenuto nel sito di Tendart',
-            1000,
-            'Benvenuto nel sito di FuoriRotta',
-            1000,
-            'Benvenuto nel sito di dei Grandi',
-            1000,
-            'Benvenuto nel sito di FuoriRottaZine',
-            1000,
-          ]}
-          speed={50}
-          style={{ fontSize: '3em' }}
-          repeat={Infinity}
-          className="text-white text-center text-sora md:text-left font-extrabold z-10"
-          />
-        </div>
-        {/* Bottone */}
-        <div className='mt-12 z-10 !text-sora'>
-          <ElectricButton buttonText='Vai alle Fanzine!' />
-        </div>
-      </div>
-        <Marquee span1="IL SITO È ANCORA IN ALLESTIMENTO " span2="ASPETTANDO LE GRAFICHE " span3="DI @fuckingmodifiè "/>
-        <div className='flex justify-center content-center z-[100] relative'>
-          <img src="landing.png" />
-        </div>
-          <footer className="relative z-[100] bg-white m-4 dark:bg-gray-800 border-4 border-black text-sora">
-            <div className="w-full mx-auto max-w-screen-xl p-4 md:flex md:items-center md:justify-between">
-              <span className="text-sm text-gray-500 sm:text-center dark:text-gray-400">
-                © 2025 Tendart
-              </span>
+    <div className="w-full bg-black text-white">
+      <Hero3D />
 
-              <ul className="flex flex-wrap items-center mt-3 text-sm font-medium text-gray-500 dark:text-gray-400 sm:mt-0">
-                <li>
-                  <a href="https://instagram.com/_tendart_/?hl=it" className="hover:underline me-4 md:me-6">Insta!</a>
-                </li>
-                <li>
-                  <a href="https://www.youtube.com/@TendArtLab" className="hover:underline me-4 md:me-6">YouTube</a>
-                </li>
-                <li>
-                  <a href="https://soundcloud.com/tendart" className="hover:underline me-4 md:me-6">SoundCloud</a>
-                </li>
-                <li>
-                  <a href="mailto:tendart01@gmail.com" className="hover:underline">Contattaci</a>
-                </li>
-              </ul>
-            </div>
+      {SECTIONS.map((s) => (
+        <PunkSection key={s.key} title={s.title} text={s.text} photos={PHOTOS[s.key]} accent={s.accent} />
+      ))}
 
-            {/* Remind / credit */}
-            <div className="text-left p-4">
-              <span className="text-xs text-gray-400 dark:text-gray-500">
-                Sito realizzato con ⚡ da <a className="hover:underline" href="https://www.linkedin.com/in/gabriele-genovesi-developer/">GabriGeno</a>
-              </span>
-            </div>
-          </footer>
+      {/* CTA Fanzine */}
+      <section className="flex h-screen w-full flex-col items-center justify-center gap-8 bg-black px-6">
+        <h2
+          className="text-bbh text-center text-5xl font-extrabold uppercase md:text-7xl"
+          style={{ color: '#ff0054', textShadow: '4px 4px 0 #000' }}
+        >
+          Le nostre fanzine
+        </h2>
+        <div className="text-sora">
+          <ElectricButton buttonText="Vai alle Fanzine!" />
+        </div>
+      </section>
+
+      <footer className="text-sora m-4 border-4 border-white bg-black">
+        <div className="mx-auto w-full max-w-screen-xl p-4 md:flex md:items-center md:justify-between">
+          <span className="text-sm text-gray-400 sm:text-center">© 2025 Tendart</span>
+          <ul className="mt-3 flex flex-wrap items-center text-sm font-medium text-gray-400 sm:mt-0">
+            <li>
+              <a href="https://instagram.com/_tendart_/?hl=it" className="me-4 hover:underline md:me-6">Insta!</a>
+            </li>
+            <li>
+              <a href="https://www.youtube.com/@TendArtLab" className="me-4 hover:underline md:me-6">YouTube</a>
+            </li>
+            <li>
+              <a href="https://soundcloud.com/tendart" className="me-4 hover:underline md:me-6">SoundCloud</a>
+            </li>
+            <li>
+              <a href="mailto:tendart01@gmail.com" className="hover:underline">Contattaci</a>
+            </li>
+          </ul>
+        </div>
+        <div className="p-4 text-left">
+          <span className="text-xs text-gray-500">
+            Sito realizzato con ⚡ da{' '}
+            <a className="hover:underline" href="https://www.linkedin.com/in/gabriele-genovesi-developer/">
+              GabriGeno
+            </a>
+          </span>
+        </div>
+      </footer>
     </div>
   );
 }

@@ -3,6 +3,7 @@ import { Canvas, useLoader, useThree } from '@react-three/fiber';
 import { Center, PresentationControls } from '@react-three/drei';
 import { SVGLoader } from 'three/examples/jsm/loaders/SVGLoader.js';
 import * as THREE from 'three';
+import HeroBackdrop from './HeroBackdrop';
 
 function webglAvailable(): boolean {
   try {
@@ -39,7 +40,7 @@ function NeonLogo() {
         <meshStandardMaterial
           color="#ff0054"
           emissive="#ff0054"
-          emissiveIntensity={0.9}
+          emissiveIntensity={0.2}
           metalness={0.3}
           roughness={0.25}
         />
@@ -50,7 +51,7 @@ function NeonLogo() {
 
 function ScrollHint() {
   return (
-    <div className="pointer-events-none absolute bottom-8 w-full animate-bounce text-center text-sora text-white/70">
+    <div className="pointer-events-none absolute bottom-8 z-20 w-full animate-bounce text-center text-sora text-white/70">
       scroll ↓
     </div>
   );
@@ -61,8 +62,9 @@ export default function Hero3D() {
     // Fallback CSS neon senza WebGL
     return (
       <section className="relative flex h-screen w-full items-center justify-center bg-black">
+        <HeroBackdrop />
         <h1
-          className="text-bbh text-6xl font-extrabold uppercase md:text-9xl"
+          className="relative z-10 text-bbh text-6xl font-extrabold uppercase md:text-9xl"
           style={{ color: '#ff0054', textShadow: '0 0 20px #ff0054, 0 0 60px #00f5d4' }}
         >
           TENDART
@@ -74,10 +76,16 @@ export default function Hero3D() {
 
   return (
     <section className="relative h-screen w-full bg-black">
-      <Canvas camera={{ position: [0, 0, 5], fov: 45 }} onCreated={({ gl }) => { gl.domElement.style.touchAction = 'pan-y'; }}>
-        <ambientLight intensity={0.4} />
-        <pointLight position={[4, 2, 4]} color="#00f5d4" intensity={3} />
-        <pointLight position={[-4, -2, 3]} color="#8cff00" intensity={2} />
+      <HeroBackdrop />
+      <Canvas
+        className="relative z-10"
+        camera={{ position: [0, 0, 5], fov: 45 }}
+        onCreated={({ gl }) => { gl.domElement.style.touchAction = 'pan-y'; }}
+      >
+        <ambientLight intensity={0.15} />
+        <directionalLight position={[3, 4, 5]} intensity={2} color="#ffffff" />
+        <pointLight position={[4, 2, 4]} color="#00f5d4" intensity={25} />
+        <pointLight position={[-4, -2, 3]} color="#8cff00" intensity={18} />
         <Suspense fallback={null}>
           <PresentationControls global snap speed={1.4} polar={[-0.6, 0.6]} azimuth={[-1, 1]}>
             <ResponsiveGroup>

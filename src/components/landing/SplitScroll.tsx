@@ -1,6 +1,6 @@
 import { Suspense, useLayoutEffect, useRef } from 'react';
 import { Canvas } from '@react-three/fiber';
-import { PresentationControls, useTexture } from '@react-three/drei';
+import { Float, PresentationControls, useTexture } from '@react-three/drei';
 import * as THREE from 'three';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
@@ -14,21 +14,26 @@ interface SplitSection {
   accent: string;
 }
 
-// L'immagine sorgente ha una didascalia "Loading..." cotta nel ~18-20% inferiore:
-// la tagliamo via mostrando solo la parte alta della texture (repeat/offset in V).
-const CROP_KEEP = 0.8; // frazione superiore dell'immagine da mostrare (taglia il resto in basso)
+// Aspect ratio reale del PNG con sfondo trasparente (749x609).
+const CART_ASPECT = 609 / 749;
 
 function CartArt() {
-  const texture = useTexture('/tendart-cart.jpg');
-  texture.repeat.set(1, CROP_KEEP);
-  texture.offset.set(0, 1 - CROP_KEEP);
+  const texture = useTexture('/tendart-cart.png');
   texture.colorSpace = THREE.SRGBColorSpace;
   texture.needsUpdate = true;
   return (
-    <mesh>
-      <planeGeometry args={[3.4, 3.4 * CROP_KEEP]} />
-      <meshBasicMaterial map={texture} side={THREE.DoubleSide} toneMapped={false} />
-    </mesh>
+    <Float speed={1.2} rotationIntensity={0.25} floatIntensity={0.4}>
+      <mesh>
+        <planeGeometry args={[3.4, 3.4 * CART_ASPECT]} />
+        <meshBasicMaterial
+          map={texture}
+          side={THREE.DoubleSide}
+          transparent
+          alphaTest={0.05}
+          toneMapped={false}
+        />
+      </mesh>
+    </Float>
   );
 }
 
@@ -43,20 +48,22 @@ export default function SplitScroll({ sections }: { sections: SplitSection[] }) 
       const blocks = gsap.utils.toArray<HTMLElement>('.split-block');
       if (reduced) return; // contenuto resta visibile, canvas resta a sinistra, niente animazioni
 
-      // reveal testo — pop-in in stile punk quando il blocco entra
+      // reveal testo — comparsa morbida (titolo poi testo, leggero stagger)
       blocks.forEach((block) => {
-        gsap.from(block.querySelectorAll('.split-title, .split-text'), {
-          opacity: 0,
-          scale: 1.4,
-          yPercent: 30,
-          stagger: 0.1,
-          ease: 'steps(4)',
+        const title = block.querySelectorAll('.split-title');
+        const text = block.querySelectorAll('.split-text');
+        const tl = gsap.timeline({
           scrollTrigger: {
             trigger: block,
             start: 'top 70%',
             toggleActions: 'play none none reverse',
           },
         });
+        tl.from(title, { autoAlpha: 0, y: 40, duration: 0.8, ease: 'power2.out' }).from(
+          text,
+          { autoAlpha: 0, y: 40, duration: 0.8, ease: 'power2.out' },
+          '-=0.6'
+        );
       });
 
       // zigzag: l'illustrazione salta di lato ad ogni sezione (solo desktop)
@@ -69,9 +76,9 @@ export default function SplitScroll({ sections }: { sections: SplitSection[] }) 
             start: 'top center',
             end: 'bottom center',
             onEnter: () =>
-              gsap.to(canvasWrapRef.current, { xPercent: toRight ? 100 : 0, ease: 'steps(3)', duration: 0.4 }),
+              gsap.to(canvasWrapRef.current, { xPercent: toRight ? 100 : 0, ease: 'power3.inOut', duration: 0.8 }),
             onEnterBack: () =>
-              gsap.to(canvasWrapRef.current, { xPercent: toRight ? 100 : 0, ease: 'steps(3)', duration: 0.4 }),
+              gsap.to(canvasWrapRef.current, { xPercent: toRight ? 100 : 0, ease: 'power3.inOut', duration: 0.8 }),
           });
         });
       });
@@ -81,12 +88,13 @@ export default function SplitScroll({ sections }: { sections: SplitSection[] }) 
 
   return (
     <section ref={root} className="relative bg-black">
-      {/* livello visivo: sticky (da md in su), l'illustrazione 3D che salta lato */}
-      <div className="relative z-0 h-[45vh] w-full md:sticky md:top-0 md:h-screen">
+      {/* livello visivo: sticky (da md in su), l'illustrazione 3D che salta lato.
+          overflow-hidden: la canvas che scivola (xPercent 0/100) resta sempre
+          contenuta entro i 2 pannelli, mai oltre il bordo del viewport. */}
+      <div className="relative z-0 h-[45vh] w-full overflow-hidden md:sticky md:top-0 md:h-screen">
         <div
           ref={canvasWrapRef}
-          className="pointer-events-auto relative h-full w-full md:absolute md:left-0 md:top-0 md:w-1/2"
-          style={{ background: '#F7F4EC' }}
+          className="pointer-events-auto relative h-full w-full bg-black md:absolute md:left-0 md:top-0 md:w-1/2"
         >
           <Canvas
             camera={{ position: [0, 0, 4], fov: 40 }}

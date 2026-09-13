@@ -48,12 +48,13 @@ export default function HeroBackdrop() {
     const ctx = gsap.context(() => {
       const images = gsap.utils.toArray<HTMLImageElement>('.backdrop-photo');
       const tl = gsap.timeline({ repeat: -1 });
-      const spacing = 0.5; // secondi tra un pop-in e il successivo
+      const spacing = 0.5; // secondi tra un crossfade e il successivo
       const hold = 1; // secondi di visibilità di ogni immagine (~2-3 visibili insieme)
+      const fade = 0.8; // durata del crossfade in/out
       images.forEach((img, i) => {
         const start = i * spacing;
-        tl.to(img, { autoAlpha: 1, duration: 0.01, ease: 'steps(1)' }, start)
-          .to(img, { autoAlpha: 0, duration: 0.01, ease: 'steps(1)' }, start + hold);
+        tl.to(img, { autoAlpha: 1, duration: fade, ease: 'power1.inOut' }, start)
+          .to(img, { autoAlpha: 0, duration: fade, ease: 'power1.inOut' }, start + hold);
       });
     }, root.current);
     return () => ctx.revert();

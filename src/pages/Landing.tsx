@@ -31,7 +31,7 @@ const SECTIONS: { key: string; title: string; text: string; accent: string }[] =
 
 export default function Landing() {
   return (
-    <div className="w-full bg-black text-white">
+    <div className="w-full bg-black text-white" style={{ overflowX: 'clip' }}>
       <Hero3D />
 
       <SplitScroll sections={SECTIONS} />

@@ -69,7 +69,7 @@ export default function Hero3D() {
 
   return (
     <section className="relative h-screen w-full bg-black">
-      <Canvas camera={{ position: [0, 0, 5], fov: 45 }}>
+      <Canvas camera={{ position: [0, 0, 5], fov: 45 }} onCreated={({ gl }) => { gl.domElement.style.touchAction = 'pan-y'; }}>
         <ambientLight intensity={0.4} />
         <pointLight position={[4, 2, 4]} color="#00f5d4" intensity={3} />
         <pointLight position={[-4, -2, 3]} color="#8cff00" intensity={2} />

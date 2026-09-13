@@ -1,6 +1,8 @@
-import { Suspense } from 'react';
-import { Canvas, useThree } from '@react-three/fiber';
-import { Center, PresentationControls, Text3D } from '@react-three/drei';
+import { Suspense, useMemo } from 'react';
+import { Canvas, useLoader, useThree } from '@react-three/fiber';
+import { Center, PresentationControls } from '@react-three/drei';
+import { SVGLoader } from 'three/examples/jsm/loaders/SVGLoader.js';
+import * as THREE from 'three';
 
 function webglAvailable(): boolean {
   try {
@@ -18,19 +20,22 @@ function ResponsiveGroup({ children }: { children: React.ReactNode }) {
   return <group scale={scale}>{children}</group>;
 }
 
-function NeonText() {
+function NeonLogo() {
+  const svg = useLoader(SVGLoader, '/tendart-logo.svg');
+  const geometry = useMemo(() => {
+    const shapes = svg.paths.flatMap((p) => SVGLoader.createShapes(p));
+    return new THREE.ExtrudeGeometry(shapes, {
+      depth: 60,
+      bevelEnabled: true,
+      bevelSize: 4,
+      bevelThickness: 5,
+      curveSegments: 8,
+    });
+  }, [svg]);
   return (
     <Center>
-      <Text3D
-        font="/fonts/helvetiker_bold.typeface.json"
-        size={1.1}
-        height={0.35}
-        bevelEnabled
-        bevelSize={0.02}
-        bevelThickness={0.03}
-        curveSegments={8}
-      >
-        TENDART
+      {/* SVG ha Y verso il basso: scala Y negativa per raddrizzare */}
+      <mesh geometry={geometry} scale={[0.006, -0.006, 0.006]}>
         <meshStandardMaterial
           color="#ff0054"
           emissive="#ff0054"
@@ -38,7 +43,7 @@ function NeonText() {
           metalness={0.3}
           roughness={0.25}
         />
-      </Text3D>
+      </mesh>
     </Center>
   );
 }
@@ -76,7 +81,7 @@ export default function Hero3D() {
         <Suspense fallback={null}>
           <PresentationControls global snap speed={1.4} polar={[-0.6, 0.6]} azimuth={[-1, 1]}>
             <ResponsiveGroup>
-              <NeonText />
+              <NeonLogo />
             </ResponsiveGroup>
           </PresentationControls>
         </Suspense>

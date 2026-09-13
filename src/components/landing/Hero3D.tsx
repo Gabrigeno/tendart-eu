@@ -14,7 +14,7 @@ function webglAvailable(): boolean {
 // Scala il testo in base alla larghezza viewport (mobile: scritta più piccola)
 function ResponsiveGroup({ children }: { children: React.ReactNode }) {
   const { viewport } = useThree();
-  const scale = Math.min(1, viewport.width / 7);
+  const scale = Math.min(1, viewport.width / 9);
   return <group scale={scale}>{children}</group>;
 }
 
@@ -34,7 +34,7 @@ function NeonText() {
         <meshStandardMaterial
           color="#ff0054"
           emissive="#ff0054"
-          emissiveIntensity={0.35}
+          emissiveIntensity={0.9}
           metalness={0.3}
           roughness={0.25}
         />
@@ -71,8 +71,8 @@ export default function Hero3D() {
     <section className="relative h-screen w-full bg-black">
       <Canvas camera={{ position: [0, 0, 5], fov: 45 }}>
         <ambientLight intensity={0.4} />
-        <pointLight position={[4, 2, 4]} color="#00f5d4" intensity={60} />
-        <pointLight position={[-4, -2, 3]} color="#8cff00" intensity={40} />
+        <pointLight position={[4, 2, 4]} color="#00f5d4" intensity={3} />
+        <pointLight position={[-4, -2, 3]} color="#8cff00" intensity={2} />
         <Suspense fallback={null}>
           <PresentationControls global snap speed={1.4} polar={[-0.6, 0.6]} azimuth={[-1, 1]}>
             <ResponsiveGroup>

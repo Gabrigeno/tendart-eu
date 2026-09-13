@@ -1,9 +1,8 @@
 import Hero3D from '@/components/landing/Hero3D';
-import PunkSection from '@/components/landing/PunkSection';
-import { PHOTOS, type SectionKey } from '@/components/landing/photos';
+import SplitScroll from '@/components/landing/SplitScroll';
 import ElectricButton from '@/components/ElectricButton';
 
-const SECTIONS: { key: SectionKey; title: string; text: string; accent: string }[] = [
+const SECTIONS: { key: string; title: string; text: string; accent: string }[] = [
   {
     key: 'chi-siamo',
     title: 'Chi siamo',
@@ -35,9 +34,7 @@ export default function Landing() {
     <div className="w-full bg-black text-white">
       <Hero3D />
 
-      {SECTIONS.map((s) => (
-        <PunkSection key={s.key} title={s.title} text={s.text} photos={PHOTOS[s.key]} accent={s.accent} />
-      ))}
+      <SplitScroll sections={SECTIONS} />
 
       {/* CTA Fanzine */}
       <section className="flex h-screen w-full flex-col items-center justify-center gap-8 bg-black px-6">

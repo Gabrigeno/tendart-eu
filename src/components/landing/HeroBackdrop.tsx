@@ -1,36 +1,39 @@
 import { useLayoutEffect, useMemo, useRef } from 'react';
 import gsap from 'gsap';
-import { PHOTOS } from './photos';
 
-const ALL_PHOTOS = Object.values(PHOTOS).flat();
+// Roster costruito a build-time da Vite: qualunque foto l'utente metta in
+// src/assets/Foto landing 1/ appare qui senza modifiche al codice.
+const modules = import.meta.glob('../../assets/Foto landing 1/*.{jpg,jpeg,JPG,JPEG,png,PNG,webp,svg}', {
+  eager: true,
+  import: 'default',
+});
+const ROSTER = Object.values(modules) as string[];
 
-interface ImageSpot {
-  src: string;
+interface Slot {
   top: number;
   left: number;
   width: number;
   rotate: number;
 }
 
-function randomSpots(photos: string[]): ImageSpot[] {
-  return photos.map((src) => ({
-    src,
-    top: Math.random() * 70,
-    left: Math.random() * 70,
-    width: 20 + Math.random() * 25,
-    rotate: -12 + Math.random() * 24,
-  }));
-}
-
-// Posizioni fisse per il fallback statico (prefers-reduced-motion)
-const STATIC_SPOTS: ImageSpot[] = [
-  { src: ALL_PHOTOS[0], top: 10, left: 8, width: 30, rotate: -6 },
-  { src: ALL_PHOTOS[6] ?? ALL_PHOTOS[0], top: 45, left: 50, width: 32, rotate: 5 },
+// Esattamente 10 posizioni/dimensioni/rotazioni fisse: ogni foto del roster
+// viene assegnata a una di queste in sequenza (foto i -> slot i % 10), così
+// qualsiasi numero di foto (10, 17, 20...) funziona senza altre modifiche.
+const SLOTS: Slot[] = [
+  { top: 4, left: 6, width: 26, rotate: -8 },
+  { top: 12, left: 58, width: 32, rotate: 6 },
+  { top: 40, left: 2, width: 22, rotate: 10 },
+  { top: 55, left: 64, width: 28, rotate: -5 },
+  { top: 2, left: 34, width: 24, rotate: 4 },
+  { top: 62, left: 30, width: 30, rotate: -10 },
+  { top: 28, left: 70, width: 20, rotate: 9 },
+  { top: 48, left: 44, width: 26, rotate: -3 },
+  { top: 8, left: 78, width: 22, rotate: -7 },
+  { top: 66, left: 6, width: 34, rotate: 3 },
 ];
 
 export default function HeroBackdrop() {
   const root = useRef<HTMLDivElement>(null);
-  const spots = useMemo(() => randomSpots(ALL_PHOTOS), []);
   const reducedMotion = useMemo(
     () =>
       typeof window !== 'undefined' &&
@@ -40,6 +43,7 @@ export default function HeroBackdrop() {
 
   useLayoutEffect(() => {
     if (reducedMotion) return;
+    if (ROSTER.length === 0) return;
     if (!root.current) return;
     const ctx = gsap.context(() => {
       const images = gsap.utils.toArray<HTMLImageElement>('.backdrop-photo');
@@ -55,22 +59,28 @@ export default function HeroBackdrop() {
     return () => ctx.revert();
   }, [reducedMotion]);
 
-  const displaySpots = reducedMotion ? STATIC_SPOTS : spots;
+  if (ROSTER.length === 0) return null;
+
+  // Ogni foto del roster appare nel tempo, assegnata a uno dei 10 slot fissi.
+  const appearances = ROSTER.map((src, i) => ({ src, slot: SLOTS[i % SLOTS.length] }));
+  const visibleAppearances = reducedMotion
+    ? appearances.slice(0, Math.min(2, appearances.length))
+    : appearances;
 
   return (
     <div ref={root} className="absolute inset-0 overflow-hidden pointer-events-none" aria-hidden="true">
-      {displaySpots.map((spot, i) => (
+      {visibleAppearances.map(({ src, slot }, i) => (
         <img
-          key={`${spot.src}-${i}`}
-          src={spot.src}
+          key={`${src}-${i}`}
+          src={src}
           alt=""
           className={reducedMotion ? undefined : 'backdrop-photo'}
           style={{
             position: 'absolute',
-            top: `${spot.top}%`,
-            left: `${spot.left}%`,
-            width: `${spot.width}vw`,
-            transform: `rotate(${spot.rotate}deg)`,
+            top: `${slot.top}%`,
+            left: `${slot.left}%`,
+            width: `${slot.width}vw`,
+            transform: `rotate(${slot.rotate}deg)`,
             opacity: reducedMotion ? 0.3 : 0,
             visibility: reducedMotion ? 'visible' : 'hidden',
             filter: 'grayscale(1) contrast(1.5) brightness(0.55)',

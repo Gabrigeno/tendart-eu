@@ -1,8 +1,9 @@
 import { Suspense, useLayoutEffect, useMemo, useRef } from 'react';
 import { Canvas } from '@react-three/fiber';
-import { Center, Float, PresentationControls, useGLTF } from '@react-three/drei';
+import { Float, PresentationControls } from '@react-three/drei';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import { IslandScene } from './IslandScene';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -13,17 +14,13 @@ interface SplitSection {
   accent: string;
 }
 
-// Scala tarata a schermo sulla bbox del GLB (~171 unità di lato) per riempire
-// il pannello senza clipping nel frustum (fov 40 @ z=4, larghezza utile ~2.3 unità).
-const ISLAND_SCALE = 0.012;
-
-function IslandModel({ reducedMotion }: { reducedMotion: boolean }) {
-  const { scene } = useGLTF('/island.glb', true); // true = draco decoder dal CDN gstatic
+// Scena procedurale autorata centrata sull'origine, isola larga ~4 unità:
+// scala 0.5 per stare nel frustum del mezzo pannello (fov 40 @ z=4, larghezza
+// utile ~2.3 unità). Rotazione x positiva = vista dall'alto in 3/4 come il disegno.
+function IslandArt({ reducedMotion }: { reducedMotion: boolean }) {
   const model = (
-    <group rotation={[0.15, -0.45, 0]}>
-      <Center>
-        <primitive object={scene} scale={ISLAND_SCALE} />
-      </Center>
+    <group rotation={[0.42, -0.5, 0]} scale={0.5} position={[0, -0.15, 0]}>
+      <IslandScene reducedMotion={reducedMotion} />
     </group>
   );
   // reduced-motion: nessun idle loop (Float usa useFrame permanente) — modello statico
@@ -34,7 +31,6 @@ function IslandModel({ reducedMotion }: { reducedMotion: boolean }) {
     </Float>
   );
 }
-useGLTF.preload('/island.glb', true);
 
 export default function SplitScroll({ sections }: { sections: SplitSection[] }) {
   const root = useRef<HTMLDivElement>(null);
@@ -116,13 +112,15 @@ export default function SplitScroll({ sections }: { sections: SplitSection[] }) 
               gl.domElement.style.touchAction = 'pan-y';
             }}
           >
-            <ambientLight intensity={1.4} />
-            <directionalLight position={[3, 4, 5]} intensity={3} />
-            <directionalLight position={[-3, 1, -2]} intensity={0.8} color="#00f5d4" />
-            <pointLight position={[-3, -1.5, -2.5]} intensity={0.35} color="#ff0054" decay={0} />
+            {/* rig ritarato per la scena flat-shaded (il GLB scuro voleva molta più luce):
+                colori cartoon accesi senza slavarli */}
+            <ambientLight intensity={0.8} />
+            <directionalLight position={[3, 4, 5]} intensity={1.6} />
+            <directionalLight position={[-3, 1, -2]} intensity={0.35} color="#00f5d4" />
+            <pointLight position={[-3, -1.5, -2.5]} intensity={0.25} color="#ff0054" decay={0} />
             <Suspense fallback={null}>
               <PresentationControls global={false} snap speed={1.4} polar={[-0.4, 0.4]} azimuth={[-0.7, 0.7]}>
-                <IslandModel reducedMotion={reducedMotion} />
+                <IslandArt reducedMotion={reducedMotion} />
               </PresentationControls>
             </Suspense>
           </Canvas>

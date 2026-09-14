@@ -37,28 +37,28 @@ export default function Landing() {
           sequenza pinnata dell'isola, non più una sezione separata. */}
       <SplitScroll sections={SECTIONS} />
 
-      <footer className="text-sora m-4 border-4 border-white bg-black">
-        <div className="mx-auto w-full max-w-screen-xl p-4 md:flex md:items-center md:justify-between">
-          <span className="text-sm text-gray-400 sm:text-center">© 2025 Tendart</span>
+      <footer className="text-sora bg-black" style={{ borderTop: '2px solid #00f5d4' }}>
+        <div className="mx-auto w-full max-w-screen-xl p-6 md:flex md:items-center md:justify-between">
+          <span className="text-sm text-gray-400 sm:text-center">© 2026 Tendart</span>
           <ul className="mt-3 flex flex-wrap items-center text-sm font-medium text-gray-400 sm:mt-0">
             <li>
-              <a href="https://instagram.com/_tendart_/?hl=it" className="me-4 hover:underline md:me-6">Insta!</a>
+              <a href="https://instagram.com/_tendart_/?hl=it" className="me-4 transition-colors hover:text-[#ff0054] md:me-6">Insta!</a>
             </li>
             <li>
-              <a href="https://www.youtube.com/@TendArtLab" className="me-4 hover:underline md:me-6">YouTube</a>
+              <a href="https://www.youtube.com/@TendArtLab" className="me-4 transition-colors hover:text-[#ff0054] md:me-6">YouTube</a>
             </li>
             <li>
-              <a href="https://soundcloud.com/tendart" className="me-4 hover:underline md:me-6">SoundCloud</a>
+              <a href="https://soundcloud.com/tendart" className="me-4 transition-colors hover:text-[#ff0054] md:me-6">SoundCloud</a>
             </li>
             <li>
-              <a href="mailto:tendart01@gmail.com" className="hover:underline">Contattaci</a>
+              <a href="mailto:tendart01@gmail.com" className="transition-colors hover:text-[#ff0054]">Contattaci</a>
             </li>
           </ul>
         </div>
-        <div className="p-4 text-left">
+        <div className="px-6 pb-6 text-left">
           <span className="text-xs text-gray-500">
             Sito realizzato con ⚡ da{' '}
-            <a className="hover:underline" href="https://www.linkedin.com/in/gabriele-genovesi-developer/">
+            <a className="transition-colors hover:text-[#00f5d4]" href="https://github.com/Gabrigeno">
               GabriGeno
             </a>
           </span>

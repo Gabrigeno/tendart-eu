@@ -1,4 +1,4 @@
-import { Suspense, useLayoutEffect, useRef } from 'react';
+import { Suspense, useLayoutEffect, useMemo, useRef } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { Float, PresentationControls, useTexture } from '@react-three/drei';
 import * as THREE from 'three';
@@ -17,22 +17,27 @@ interface SplitSection {
 // Aspect ratio reale del PNG con sfondo trasparente (749x609).
 const CART_ASPECT = 609 / 749;
 
-function CartArt() {
+function CartArt({ reducedMotion }: { reducedMotion: boolean }) {
   const texture = useTexture('/tendart-cart.png');
   texture.colorSpace = THREE.SRGBColorSpace;
   texture.needsUpdate = true;
+  const mesh = (
+    <mesh>
+      <planeGeometry args={[3.4, 3.4 * CART_ASPECT]} />
+      <meshBasicMaterial
+        map={texture}
+        side={THREE.DoubleSide}
+        transparent
+        alphaTest={0.05}
+        toneMapped={false}
+      />
+    </mesh>
+  );
+  // reduced-motion: nessun idle loop (Float usa useFrame permanente) — mesh statica
+  if (reducedMotion) return mesh;
   return (
     <Float speed={1.2} rotationIntensity={0.25} floatIntensity={0.4}>
-      <mesh>
-        <planeGeometry args={[3.4, 3.4 * CART_ASPECT]} />
-        <meshBasicMaterial
-          map={texture}
-          side={THREE.DoubleSide}
-          transparent
-          alphaTest={0.05}
-          toneMapped={false}
-        />
-      </mesh>
+      {mesh}
     </Float>
   );
 }
@@ -40,9 +45,13 @@ function CartArt() {
 export default function SplitScroll({ sections }: { sections: SplitSection[] }) {
   const root = useRef<HTMLDivElement>(null);
   const canvasWrapRef = useRef<HTMLDivElement>(null);
+  const reducedMotion = useMemo(
+    () => typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches,
+    []
+  );
 
   useLayoutEffect(() => {
-    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const reduced = reducedMotion;
     if (!root.current) return;
     const ctx = gsap.context(() => {
       const blocks = gsap.utils.toArray<HTMLElement>('.split-block');
@@ -84,7 +93,7 @@ export default function SplitScroll({ sections }: { sections: SplitSection[] }) 
       });
     }, root);
     return () => ctx.revert();
-  }, []);
+  }, [reducedMotion]);
 
   return (
     <section ref={root} className="relative bg-black">
@@ -106,7 +115,7 @@ export default function SplitScroll({ sections }: { sections: SplitSection[] }) 
             <directionalLight position={[3, 4, 5]} intensity={0.6} />
             <Suspense fallback={null}>
               <PresentationControls global={false} snap speed={1.4} polar={[-0.4, 0.4]} azimuth={[-0.7, 0.7]}>
-                <CartArt />
+                <CartArt reducedMotion={reducedMotion} />
               </PresentationControls>
             </Suspense>
           </Canvas>

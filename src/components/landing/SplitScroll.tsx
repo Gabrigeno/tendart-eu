@@ -14,16 +14,16 @@ interface SplitSection {
   accent: string;
 }
 
-// Aspect ratio reale del PNG con sfondo trasparente (749x609).
-const CART_ASPECT = 609 / 749;
+// Aspect ratio reale del PNG con sfondo trasparente (823x794).
+const ISLAND_ASPECT = 794 / 823;
 
-function CartArt({ reducedMotion }: { reducedMotion: boolean }) {
-  const texture = useTexture('/tendart-cart.png');
+function IslandArt({ reducedMotion }: { reducedMotion: boolean }) {
+  const texture = useTexture('/tendart-isola.png');
   texture.colorSpace = THREE.SRGBColorSpace;
   texture.needsUpdate = true;
   const mesh = (
     <mesh>
-      <planeGeometry args={[3.4, 3.4 * CART_ASPECT]} />
+      <planeGeometry args={[2.2, 2.2 * ISLAND_ASPECT]} />
       <meshBasicMaterial
         map={texture}
         side={THREE.DoubleSide}
@@ -105,6 +105,17 @@ export default function SplitScroll({ sections }: { sections: SplitSection[] }) 
           ref={canvasWrapRef}
           className="pointer-events-auto relative h-full w-full bg-black md:absolute md:left-0 md:top-0 md:w-1/2"
         >
+          {/* alone al neon dietro il disegno: la scritta TENDART è nera e sparirebbe
+              sul pannello nero senza un controluce colorato. Sotto la Canvas in z-order
+              (nessuna z-index esplicita necessaria: precede il <Canvas> nel DOM). */}
+          <div
+            className="pointer-events-none absolute left-1/2 top-1/2 h-[70%] w-[70%] -translate-x-1/2 -translate-y-1/2"
+            style={{
+              background:
+                'radial-gradient(closest-side, rgba(255,0,84,0.45), rgba(0,245,212,0.12) 60%, transparent 75%)',
+              filter: 'blur(40px)',
+            }}
+          />
           <Canvas
             camera={{ position: [0, 0, 4], fov: 40 }}
             onCreated={({ gl }) => {
@@ -115,7 +126,7 @@ export default function SplitScroll({ sections }: { sections: SplitSection[] }) 
             <directionalLight position={[3, 4, 5]} intensity={0.6} />
             <Suspense fallback={null}>
               <PresentationControls global={false} snap speed={1.4} polar={[-0.4, 0.4]} azimuth={[-0.7, 0.7]}>
-                <CartArt reducedMotion={reducedMotion} />
+                <IslandArt reducedMotion={reducedMotion} />
               </PresentationControls>
             </Suspense>
           </Canvas>

@@ -1,4 +1,4 @@
-import { Suspense, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { Suspense, useCallback, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { Canvas, useThree } from '@react-three/fiber';
 import { Float, PresentationControls } from '@react-three/drei';
 import type { Group } from 'three';
@@ -78,6 +78,7 @@ function StageCanvas({
   reducedMotion,
   onGroup,
   onFanzineGroup,
+  onIconReady,
 }: {
   reducedMotion: boolean;
   onGroup: (g: Group | null) => void;
@@ -86,6 +87,10 @@ function StageCanvas({
   // non avrebbe un punto di sincronia sensato col bottone HTML più in basso
   // nel flusso — quindi qui viene semplicemente omessa.
   onFanzineGroup?: (g: Group | null) => void;
+  // trigger del flourish esposto da FanzineIcon: il link HTML "Guarda le
+  // nostre fanzine →" in SplitScroll lo richiama per animare l'icona prima
+  // di navigare. Passato solo insieme a onFanzineGroup (palco animato).
+  onIconReady?: (trigger: (() => void) | null) => void;
 }) {
   return (
     <>
@@ -116,13 +121,15 @@ function StageCanvas({
           {onFanzineGroup && (
             // Sorella dell'isola ma FUORI da PresentationControls: non deve
             // seguire il drag/rotazione manuale dell'isola, resta ancorata
-            // vicino all'area del bottone "VAI ALLE FANZINE" (che sta in
-            // basso al centro nel finale). Scale quasi-zero di partenza:
-            // la timeline GSAP la porta a FANZINE_SCALE in sync col resto
-            // del finale — evita un flash a piena scala prima che l'effetto
-            // giri.
-            <group ref={onFanzineGroup} scale={0.0001} position={[-0.6, -1.0, 0.45]}>
-              <FanzineIcon reducedMotion={reducedMotion} />
+            // vicino al link "Guarda le nostre fanzine →" (basso, vicino al
+            // centro nel finale) — x ravvicinato al centro (non -0.6 come
+            // prima) così icona 3D e link HTML leggono come UNA coppia
+            // affiancata, non due elementi sparsi ai lati opposti dello
+            // schermo. Scale quasi-zero di partenza: la timeline GSAP la
+            // porta a FANZINE_SCALE in sync col resto del finale — evita un
+            // flash a piena scala prima che l'effetto giri.
+            <group ref={onFanzineGroup} scale={0.0001} position={[-0.22, -0.95, 0.45]}>
+              <FanzineIcon reducedMotion={reducedMotion} onReady={onIconReady} />
             </group>
           )}
         </Suspense>
@@ -162,39 +169,40 @@ function Caption({ section }: { section: SplitSection }) {
   );
 }
 
-// Blocco CTA fanzine del finale (non più sezione a parte in Landing): bottone
-// fatto apposta per questo punto, nel linguaggio delle card di /library —
-// bordo accent, ombra dura, glow al hover — NON l'ElectricButton giallo del
-// vecchio blocco. Deve restare cliccabile: pointer-events-auto qui — quando
-// autoAlpha=0 visibility:hidden lo disattiva da solo, il drag non ne risente.
-function FanzineCtaBlock() {
+// CTA fanzine del finale (semplificata da feedback utente, task 18): niente
+// più heading/bottone bordati — solo il link testuale, stesso trattamento
+// visivo del mock "Scopri di più →" sotto le caption (stessa classe/colore/
+// dimensione), ma QUESTO è funzionale davvero. Se `onTrigger` è passato
+// (palco animato, icona presente) il click fa partire il flourish
+// sull'icona 3D e la navigazione avviene al suo completamento; senza
+// `onTrigger` (fallback reduced-motion, icona omessa) è un <Link> normale
+// che naviga subito. pointer-events-auto: dentro .split-finale che è
+// pointer-events-none, va riattivato qui — l'autoAlpha=0 lo disabilita da
+// solo via visibility:hidden, il drag dell'isola non ne risente.
+function FanzineCtaLink({ onTrigger }: { onTrigger?: () => void }) {
+  const linkClassName =
+    'text-sora pointer-events-auto inline-block text-sm font-bold uppercase tracking-widest hover:underline';
+  const linkStyle = { color: '#ff0054', textShadow: '0 2px 10px rgba(0,0,0,0.9)' } as const;
+
+  if (onTrigger) {
+    return (
+      <a
+        href="/library"
+        onClick={(e) => {
+          e.preventDefault();
+          onTrigger();
+        }}
+        className={linkClassName}
+        style={linkStyle}
+      >
+        Guarda le nostre fanzine →
+      </a>
+    );
+  }
   return (
-    <div className="pointer-events-auto flex flex-col items-center gap-4 text-center md:gap-5">
-      <h2
-        className="text-bbh text-3xl font-extrabold uppercase md:text-5xl"
-        style={{ color: '#ff0054', textShadow: '4px 4px 0 #000' }}
-      >
-        Le nostre fanzine
-      </h2>
-      <Link
-        to="/library"
-        // !text-white: index.css ha una regola globale `a { color }` fuori
-        // dai layer Tailwind, che vincerebbe sulle utility — serve important.
-        className="text-sora inline-block border-2 bg-black/60 px-8 py-3 text-base font-bold uppercase tracking-wider !text-white transition-all duration-300 hover:scale-[1.04] hover:bg-black md:text-xl"
-        style={{ borderColor: '#ff0054', boxShadow: '4px 4px 0 #000' }}
-        onMouseEnter={(e) => {
-          e.currentTarget.style.boxShadow = '0 0 22px #ff0054, 0 0 40px rgba(0,245,212,0.35), 4px 4px 0 #000';
-        }}
-        onMouseLeave={(e) => {
-          e.currentTarget.style.boxShadow = '4px 4px 0 #000';
-        }}
-      >
-        Vai alle Fanzine{' '}
-        <span aria-hidden style={{ color: '#00f5d4' }}>
-          →
-        </span>
-      </Link>
-    </div>
+    <Link to="/library" className={linkClassName} style={linkStyle}>
+      Guarda le nostre fanzine →
+    </Link>
   );
 }
 
@@ -211,7 +219,7 @@ const FINALE_POS = [
   'right-[4%] top-[52%] w-[45%] text-right md:right-[5%] md:top-auto md:bottom-[21%] md:w-auto md:max-w-xs',
 ];
 
-function FinaleBlocks({ sections }: { sections: SplitSection[] }) {
+function FinaleBlocks({ sections, onIconTrigger }: { sections: SplitSection[]; onIconTrigger?: () => void }) {
   return (
     <>
       {sections.map((s, i) => (
@@ -230,8 +238,12 @@ function FinaleBlocks({ sections }: { sections: SplitSection[] }) {
           </p>
         </div>
       ))}
-      <div className="absolute inset-x-0 bottom-[4%] flex justify-center md:bottom-[5%]">
-        <FanzineCtaBlock />
+      {/* CTA testuale centrata: l'icona 3D (x=-0.22 in world units, poco a
+          sinistra dell'origine) proietta appena a sinistra del centro nella
+          stessa fascia verticale — il link centrato le sta "accanto" con un
+          piccolo margine, non sparso all'altro capo dello schermo. */}
+      <div className="absolute inset-x-0 bottom-[6%] flex justify-center md:bottom-[7%]">
+        <FanzineCtaLink onTrigger={onIconTrigger} />
       </div>
     </>
   );
@@ -244,6 +256,16 @@ export default function SplitScroll({ sections }: { sections: SplitSection[] }) 
   // (reconciler r3f) — lo stato forza il re-run dell'effetto quando è pronto.
   const [scrollGroup, setScrollGroup] = useState<Group | null>(null);
   const [fanzineGroup, setFanzineGroup] = useState<Group | null>(null);
+  // trigger del flourish esposto da FanzineIcon (callback-ref, non state: non
+  // serve un re-render quando cambia) — il link "Guarda le nostre fanzine →"
+  // lo richiama per animare l'icona prima di navigare.
+  const iconTriggerRef = useRef<(() => void) | null>(null);
+  const handleIconReady = useCallback((trigger: (() => void) | null) => {
+    iconTriggerRef.current = trigger;
+  }, []);
+  const handleIconTrigger = useCallback(() => {
+    iconTriggerRef.current?.();
+  }, []);
   const reducedMotion = useMemo(
     () => typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches,
     []
@@ -402,9 +424,11 @@ export default function SplitScroll({ sections }: { sections: SplitSection[] }) 
           ))}
           {/* anche senza animazioni la sequenza chiude con la CTA fanzine,
               statica e visibile (i 4 paragrafi completi del finale sono già
-              i testi qui sopra — niente doppione nel flusso statico) */}
+              i testi qui sopra — niente doppione nel flusso statico). Niente
+              icona 3D qui (omessa, decisione task 17) né flourish: reduced-
+              motion naviga subito, un <Link> normale basta. */}
           <div className="md:col-span-2">
-            <FanzineCtaBlock />
+            <FanzineCtaLink />
           </div>
         </div>
       </section>
@@ -417,7 +441,12 @@ export default function SplitScroll({ sections }: { sections: SplitSection[] }) 
           schermo, isola al centro, testi in overlay assoluto che si
           materializzano sul posto (autoAlpha + micro-scale, MAI translate y). */}
       <div ref={stageRef} className="relative h-screen w-full overflow-hidden bg-black">
-        <StageCanvas reducedMotion={false} onGroup={setScrollGroup} onFanzineGroup={setFanzineGroup} />
+        <StageCanvas
+          reducedMotion={false}
+          onGroup={setScrollGroup}
+          onFanzineGroup={setFanzineGroup}
+          onIconReady={handleIconReady}
+        />
         {sections.map((s, i) => (
           <div
             key={s.key}
@@ -441,7 +470,7 @@ export default function SplitScroll({ sections }: { sections: SplitSection[] }) 
             pannello: il gsap anima autoAlpha/scale di questo div. Resta
             pointer-events-none per il drag; solo la CTA riattiva i click. */}
         <div className="split-finale pointer-events-none invisible absolute inset-0 z-10 opacity-0">
-          <FinaleBlocks sections={sections} />
+          <FinaleBlocks sections={sections} onIconTrigger={handleIconTrigger} />
         </div>
         {/* flash di rientro: velo bianco caldo con cuore magenta (palette punk),
             sopra canvas e testi (z-20) — il testo nuovo diventa leggibile solo

@@ -1,6 +1,5 @@
 import Hero3D from '@/components/landing/Hero3D';
 import SplitScroll from '@/components/landing/SplitScroll';
-import ElectricButton from '@/components/ElectricButton';
 
 const SECTIONS: { key: string; title: string; text: string; accent: string }[] = [
   {
@@ -34,20 +33,9 @@ export default function Landing() {
     <div className="w-full bg-black text-white" style={{ overflowX: 'clip' }}>
       <Hero3D />
 
+      {/* La CTA fanzine vive DENTRO SplitScroll: è l'ultima sosta della
+          sequenza pinnata dell'isola, non più una sezione separata. */}
       <SplitScroll sections={SECTIONS} />
-
-      {/* CTA Fanzine */}
-      <section className="flex h-screen w-full flex-col items-center justify-center gap-8 bg-black px-6">
-        <h2
-          className="text-bbh text-center text-5xl font-extrabold uppercase md:text-7xl"
-          style={{ color: '#ff0054', textShadow: '4px 4px 0 #000' }}
-        >
-          Le nostre fanzine
-        </h2>
-        <div className="text-sora">
-          <ElectricButton buttonText="Vai alle Fanzine!" />
-        </div>
-      </section>
 
       <footer className="text-sora m-4 border-4 border-white bg-black">
         <div className="mx-auto w-full max-w-screen-xl p-4 md:flex md:items-center md:justify-between">

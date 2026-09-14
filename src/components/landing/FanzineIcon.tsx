@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useFrame } from '@react-three/fiber';
+import { Center } from '@react-three/drei';
 import { useNavigate } from 'react-router-dom';
 import * as THREE from 'three';
 
@@ -18,6 +19,19 @@ import * as THREE from 'three';
  * `onReady` espone la funzione di trigger a SplitScroll (via callback-ref,
  * stesso pattern di onGroup/onFanzineGroup) così anche il link HTML
  * "Guarda le nostre fanzine →" può far partire lo stesso flourish sull'icona.
+ *
+ * FIX (task 18, review): le copertine sono impilate "alla rinfusa" con
+ * posizioni sfalsate rispetto all'origine locale del group (vedi COVERS).
+ * Ruotare/scalare quel group direttamente pivotava attorno all'origine
+ * ARBITRARIA (0,0,0), non attorno al centro VISIVO della pila — con la
+ * scala idle/hover (1 -> 1.08) la deriva era impercettibile, ma col pop del
+ * flourish (fino a 1.55x) la pila "scappava" visibilmente lontano dal testo
+ * CTA accanto. Fix: le mesh vivono dentro un <Center> di drei (stesso
+ * componente già usato in Hero3D per il logo SVG) che le ricentra sul proprio
+ * pivot — rotazione e scala (idle, hover, flourish) si applicano ORA al
+ * gruppo esposto da <Center> (`visual`), non più al group esterno `group`
+ * (che resta solo l'ancora per eventi puntatore + il bob idle in Y,
+ * traslazione pura → nessuna deriva possibile).
  */
 const FLAT = { flatShading: true } as const;
 
@@ -72,6 +86,10 @@ export function FanzineIcon({
 }) {
   const navigate = useNavigate();
   const group = useRef<THREE.Group>(null);
+  // pivot ricentrato (outer group esposto da <Center>): TUTTA la rotazione e
+  // la scala (idle, hover, flourish) vive qui, mai su `group` — vedi nota
+  // "FIX" in cima al file.
+  const visual = useRef<THREE.Group>(null);
   const [hovered, setHovered] = useState(false);
   const hoverScale = useRef(1);
   // guard contro doppio-click/doppia-navigazione: mentre true il flourish è
@@ -118,22 +136,26 @@ export function FanzineIcon({
   }, [onReady, triggerFlourish]);
 
   useFrame((state) => {
-    if (!group.current) return;
+    if (!group.current || !visual.current) return;
     const t = state.clock.elapsedTime;
 
     if (flourishing.current) {
       if (flourishStart.current === null) {
         flourishStart.current = t;
-        flourishBaseRotation.current = group.current.rotation.y;
+        flourishBaseRotation.current = visual.current.rotation.y;
       }
       const elapsed = t - flourishStart.current;
       const progress = Math.min(elapsed / FLOURISH_DURATION, 1);
       // ease-out cubic: spin veloce che rallenta in chiusura, ~2 giri pieni.
       const eased = 1 - Math.pow(1 - progress, 3);
-      group.current.rotation.y = flourishBaseRotation.current + eased * Math.PI * 4;
+      // rotazione e scala sul pivot RICENTRATO (`visual`, esposto da
+      // <Center>): la pila ruota/pompa sul proprio centro visivo, non
+      // sull'origine arbitraria del group esterno — niente più deriva verso
+      // un bordo dello schermo mentre il testo CTA resta fermo accanto.
+      visual.current.rotation.y = flourishBaseRotation.current + eased * Math.PI * 4;
       // pop/bounce: cresce fino a ~1.55x a metà corsa poi torna a 1 — un
       // "botto" visibile, non l'idle bob sottile.
-      group.current.scale.setScalar(1 + Math.sin(progress * Math.PI) * 0.55);
+      visual.current.scale.setScalar(1 + Math.sin(progress * Math.PI) * 0.55);
       if (progress >= 1) {
         flourishing.current = false;
         flourishStart.current = null;
@@ -143,14 +165,16 @@ export function FanzineIcon({
     }
 
     if (!reducedMotion) {
+      // il bob resta sul group ESTERNO: è una traslazione pura, nessun
+      // pivot coinvolto, non c'entra col fix del centro visivo.
       group.current.position.y = Math.sin(t * 1.4) * 0.055;
-      group.current.rotation.y += 0.004;
+      visual.current.rotation.y += 0.004;
     }
     // hover feedback: lerp verso 1.08 — risposta a input, non idle loop,
     // resta attiva anche con reducedMotion.
     const target = hovered ? 1.08 : 1;
     hoverScale.current += (target - hoverScale.current) * 0.15;
-    group.current.scale.setScalar(hoverScale.current);
+    visual.current.scale.setScalar(hoverScale.current);
   });
 
   return (
@@ -171,23 +195,30 @@ export function FanzineIcon({
         document.body.style.cursor = 'auto';
       }}
     >
-      {covers.map((c, i) => (
-        <mesh key={i} position={c.pos} rotation={[0, c.rotY, c.rotZ]}>
-          <boxGeometry args={c.size} />
-          <meshStandardMaterial
-            color={c.color}
-            emissive={c.emissive}
-            emissiveIntensity={c.emissiveIntensity}
-            {...FLAT}
-          />
+      {/* <Center>: ricentra i figli sul proprio pivot (bbox center a runtime,
+          calcolato una volta al mount) — vedi nota "FIX" in cima al file.
+          `ref={visual}` è il group ESTERNO di Center: ruotarlo/scalarlo
+          pivota correttamente sul centro visivo della pila, non sull'origine
+          arbitraria in cui sono state autorate le mesh sfalsate. */}
+      <Center ref={visual}>
+        {covers.map((c, i) => (
+          <mesh key={i} position={c.pos} rotation={[0, c.rotY, c.rotZ]}>
+            <boxGeometry args={c.size} />
+            <meshStandardMaterial
+              color={c.color}
+              emissive={c.emissive}
+              emissiveIntensity={c.emissiveIntensity}
+              {...FLAT}
+            />
+          </mesh>
+        ))}
+        {/* bollino acido in cima, come un timbro appiccicato di sbieco — più
+            acceso: emissive stessa tinta per un verde acido che "spara" */}
+        <mesh position={[0.11, 0.1285, 0.075]} rotation={[0, -0.18, 0.5]}>
+          <boxGeometry args={[0.1, 0.012, 0.1]} />
+          <meshStandardMaterial color="#9bff1a" emissive="#8cff00" emissiveIntensity={0.7} {...FLAT} />
         </mesh>
-      ))}
-      {/* bollino acido in cima, come un timbro appiccicato di sbieco — più
-          acceso: emissive stessa tinta per un verde acido che "spara" */}
-      <mesh position={[0.11, 0.1285, 0.075]} rotation={[0, -0.18, 0.5]}>
-        <boxGeometry args={[0.1, 0.012, 0.1]} />
-        <meshStandardMaterial color="#9bff1a" emissive="#8cff00" emissiveIntensity={0.7} {...FLAT} />
-      </mesh>
+      </Center>
     </group>
   );
 }

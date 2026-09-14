@@ -6,6 +6,7 @@ import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { Link } from 'react-router-dom';
 import { IslandScene } from './IslandScene';
+import { FanzineIcon } from './FanzineIcon';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -73,7 +74,19 @@ function IslandRig({ reducedMotion, onGroup }: { reducedMotion: boolean; onGroup
   );
 }
 
-function StageCanvas({ reducedMotion, onGroup }: { reducedMotion: boolean; onGroup: (g: Group | null) => void }) {
+function StageCanvas({
+  reducedMotion,
+  onGroup,
+  onFanzineGroup,
+}: {
+  reducedMotion: boolean;
+  onGroup: (g: Group | null) => void;
+  // opzionale: SOLO il palco animato lo passa. Nel fallback reduced-motion
+  // (Canvas separata sopra i testi statici, niente pin/timeline) l'icona 3D
+  // non avrebbe un punto di sincronia sensato col bottone HTML più in basso
+  // nel flusso — quindi qui viene semplicemente omessa.
+  onFanzineGroup?: (g: Group | null) => void;
+}) {
   return (
     <>
       {/* alone al neon dietro il disegno: la scritta/i colori scuri sparirebbero
@@ -100,6 +113,18 @@ function StageCanvas({ reducedMotion, onGroup }: { reducedMotion: boolean; onGro
         <pointLight position={[-3, -1.5, -2.5]} intensity={0.25} color="#ff0054" decay={0} />
         <Suspense fallback={null}>
           <IslandRig reducedMotion={reducedMotion} onGroup={onGroup} />
+          {onFanzineGroup && (
+            // Sorella dell'isola ma FUORI da PresentationControls: non deve
+            // seguire il drag/rotazione manuale dell'isola, resta ancorata
+            // vicino all'area del bottone "VAI ALLE FANZINE" (che sta in
+            // basso al centro nel finale). Scale quasi-zero di partenza:
+            // la timeline GSAP la porta a FANZINE_SCALE in sync col resto
+            // del finale — evita un flash a piena scala prima che l'effetto
+            // giri.
+            <group ref={onFanzineGroup} scale={0.0001} position={[-0.6, -1.0, 0.45]}>
+              <FanzineIcon reducedMotion={reducedMotion} />
+            </group>
+          )}
         </Suspense>
       </Canvas>
     </>
@@ -218,6 +243,7 @@ export default function SplitScroll({ sections }: { sections: SplitSection[] }) 
   // callback-ref/onReady: il group three monta DOPO il primo commit React
   // (reconciler r3f) — lo stato forza il re-run dell'effetto quando è pronto.
   const [scrollGroup, setScrollGroup] = useState<Group | null>(null);
+  const [fanzineGroup, setFanzineGroup] = useState<Group | null>(null);
   const reducedMotion = useMemo(
     () => typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches,
     []
@@ -247,6 +273,9 @@ export default function SplitScroll({ sections }: { sections: SplitSection[] }) 
       // scala di riposo del finale: l'isola torna "a casa" ma leggermente
       // ridotta, così i 4 blocchi radiali le respirano attorno.
       const FINAL_SCALE = 0.7;
+      // scala a riposo dell'icona fanzine 3D: piccola, un accento accanto
+      // alla CTA — non deve competere con l'isola per attenzione.
+      const FANZINE_SCALE = 0.62;
 
       // Un solo palco pinnato: tutto il viaggio (N sezioni + sosta finale
       // recap+CTA) avviene dentro questo viewport, lo scrub lega la
@@ -339,11 +368,23 @@ export default function SplitScroll({ sections }: { sections: SplitSection[] }) 
           t + FTRANS * 0.62
         );
       }
+      // l'icona 3D della fanzine si materializza in sync col resto del
+      // finale (stesso istante d'ingresso del div .split-finale) con un
+      // piccolo overshoot back.out — stesso linguaggio del rientro
+      // dell'isola, così le due "pop-in" leggono come un unico gesto.
+      if (fanzineGroup) {
+        tl.fromTo(
+          fanzineGroup.scale,
+          { x: 0.0001, y: 0.0001, z: 0.0001 },
+          { x: FANZINE_SCALE, y: FANZINE_SCALE, z: FANZINE_SCALE, duration: FTRANS * 0.32, ease: 'back.out(1.6)' },
+          t + FTRANS * 0.62
+        );
+      }
       // sosta finale: il recap+CTA resta in scena prima dello sblocco del pin
       tl.to({}, { duration: HOLD }, t + FTRANS);
     });
     return () => mm.revert();
-  }, [reducedMotion, scrollGroup, sections.length]);
+  }, [reducedMotion, scrollGroup, fanzineGroup, sections.length]);
 
   // Fallback reduced-motion: niente pin, niente timeline — isola centrata
   // statica e i testi tutti visibili, impilati sotto, tutto leggibile.
@@ -376,7 +417,7 @@ export default function SplitScroll({ sections }: { sections: SplitSection[] }) 
           schermo, isola al centro, testi in overlay assoluto che si
           materializzano sul posto (autoAlpha + micro-scale, MAI translate y). */}
       <div ref={stageRef} className="relative h-screen w-full overflow-hidden bg-black">
-        <StageCanvas reducedMotion={false} onGroup={setScrollGroup} />
+        <StageCanvas reducedMotion={false} onGroup={setScrollGroup} onFanzineGroup={setFanzineGroup} />
         {sections.map((s, i) => (
           <div
             key={s.key}

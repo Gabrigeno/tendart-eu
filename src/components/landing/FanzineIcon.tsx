@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { useNavigate } from 'react-router-dom';
 import * as THREE from 'three';
@@ -36,6 +36,16 @@ export function FanzineIcon({ reducedMotion }: { reducedMotion: boolean }) {
   // l'array a ogni render, coerente con lo stile di IslandScene.
   const covers = useMemo(() => COVERS, []);
 
+  // rete di sicurezza: se il componente sparisce (smonta) mentre il cursore
+  // è ancora "pointer" (es. click che naviga via, o scale-out del finale
+  // che porta l'oggetto fuori dal raycast prima di un pointerOut) resetta lo
+  // stile globale — altrimenti resta 'pointer' ovunque sulla pagina dopo.
+  useEffect(() => {
+    return () => {
+      document.body.style.cursor = 'auto';
+    };
+  }, []);
+
   useFrame((state) => {
     if (!group.current) return;
     if (!reducedMotion) {
@@ -55,6 +65,11 @@ export function FanzineIcon({ reducedMotion }: { reducedMotion: boolean }) {
       ref={group}
       onClick={(e) => {
         e.stopPropagation();
+        // il cursore resta 'pointer' finché non arriva un pointerOut — ma la
+        // navigazione client-side non genera un unmount/reload che lo
+        // ripulisca da solo in tempo: resettalo qui esplicitamente, PRIMA
+        // di lasciare la pagina, così /library non eredita il pointer.
+        document.body.style.cursor = 'auto';
         navigate('/library');
       }}
       onPointerOver={(e) => {

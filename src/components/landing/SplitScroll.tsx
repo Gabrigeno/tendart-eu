@@ -1,7 +1,6 @@
 import { Suspense, useLayoutEffect, useMemo, useRef } from 'react';
 import { Canvas } from '@react-three/fiber';
-import { Float, PresentationControls, useTexture } from '@react-three/drei';
-import * as THREE from 'three';
+import { Center, Float, PresentationControls, useGLTF } from '@react-three/drei';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 
@@ -14,33 +13,28 @@ interface SplitSection {
   accent: string;
 }
 
-// Aspect ratio reale del PNG con sfondo trasparente (823x794).
-const ISLAND_ASPECT = 794 / 823;
+// Scala tarata a schermo sulla bbox del GLB (~171 unità di lato) per riempire
+// il pannello senza clipping nel frustum (fov 40 @ z=4, larghezza utile ~2.3 unità).
+const ISLAND_SCALE = 0.012;
 
-function IslandArt({ reducedMotion }: { reducedMotion: boolean }) {
-  const texture = useTexture('/tendart-isola.png');
-  texture.colorSpace = THREE.SRGBColorSpace;
-  texture.needsUpdate = true;
-  const mesh = (
-    <mesh>
-      <planeGeometry args={[2.2, 2.2 * ISLAND_ASPECT]} />
-      <meshBasicMaterial
-        map={texture}
-        side={THREE.DoubleSide}
-        transparent
-        alphaTest={0.05}
-        toneMapped={false}
-      />
-    </mesh>
+function IslandModel({ reducedMotion }: { reducedMotion: boolean }) {
+  const { scene } = useGLTF('/island.glb', true); // true = draco decoder dal CDN gstatic
+  const model = (
+    <group rotation={[0.15, -0.45, 0]}>
+      <Center>
+        <primitive object={scene} scale={ISLAND_SCALE} />
+      </Center>
+    </group>
   );
-  // reduced-motion: nessun idle loop (Float usa useFrame permanente) — mesh statica
-  if (reducedMotion) return mesh;
+  // reduced-motion: nessun idle loop (Float usa useFrame permanente) — modello statico
+  if (reducedMotion) return model;
   return (
     <Float speed={1.2} rotationIntensity={0.25} floatIntensity={0.4}>
-      {mesh}
+      {model}
     </Float>
   );
 }
+useGLTF.preload('/island.glb', true);
 
 export default function SplitScroll({ sections }: { sections: SplitSection[] }) {
   const root = useRef<HTMLDivElement>(null);
@@ -122,11 +116,13 @@ export default function SplitScroll({ sections }: { sections: SplitSection[] }) 
               gl.domElement.style.touchAction = 'pan-y';
             }}
           >
-            <ambientLight intensity={0.9} />
-            <directionalLight position={[3, 4, 5]} intensity={0.6} />
+            <ambientLight intensity={1.4} />
+            <directionalLight position={[3, 4, 5]} intensity={3} />
+            <directionalLight position={[-3, 1, -2]} intensity={0.8} color="#00f5d4" />
+            <pointLight position={[-3, -1.5, -2.5]} intensity={0.35} color="#ff0054" decay={0} />
             <Suspense fallback={null}>
               <PresentationControls global={false} snap speed={1.4} polar={[-0.4, 0.4]} azimuth={[-0.7, 0.7]}>
-                <IslandArt reducedMotion={reducedMotion} />
+                <IslandModel reducedMotion={reducedMotion} />
               </PresentationControls>
             </Suspense>
           </Canvas>

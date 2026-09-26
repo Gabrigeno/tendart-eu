@@ -128,7 +128,7 @@ function StageCanvas({
             // schermo. Scale quasi-zero di partenza: la timeline GSAP la
             // porta a FANZINE_SCALE in sync col resto del finale — evita un
             // flash a piena scala prima che l'effetto giri.
-            <group ref={onFanzineGroup} scale={0.0001} position={[-0.22, -0.95, 0.45]}>
+            <group ref={onFanzineGroup} scale={0.0001} position={[0, -0.78, 0.45]}>
               <FanzineIcon reducedMotion={reducedMotion} onReady={onIconReady} />
             </group>
           )}

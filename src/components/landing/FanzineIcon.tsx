@@ -1,8 +1,9 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useFrame } from '@react-three/fiber';
-import { Center } from '@react-three/drei';
+import { Center, useTexture } from '@react-three/drei';
 import { useNavigate } from 'react-router-dom';
 import * as THREE from 'three';
+import { fanzines } from '@/data/fanzines';
 
 /**
  * Icona 3D low-poly "pila di fanzine" — accento cliccabile nel finale, stesso
@@ -21,7 +22,7 @@ import * as THREE from 'three';
  * "Guarda le nostre fanzine →" può far partire lo stesso flourish sull'icona.
  *
  * FIX (task 18, review): le copertine sono impilate "alla rinfusa" con
- * posizioni sfalsate rispetto all'origine locale del group (vedi COVERS).
+ * posizioni sfalsate rispetto all'origine locale del group (vedi JITTER).
  * Ruotare/scalare quel group direttamente pivotava attorno all'origine
  * ARBITRARIA (0,0,0), non attorno al centro VISIVO della pila — con la
  * scala idle/hover (1 -> 1.08) la deriva era impercettibile, ma col pop del
@@ -33,44 +34,27 @@ import * as THREE from 'three';
  * (che resta solo l'ancora per eventi puntatore + il bob idle in Y,
  * traslazione pura → nessuna deriva possibile).
  */
-const FLAT = { flatShading: true } as const;
+// Albo spillato A5-ish sdraiato: x = larghezza, z = altezza, y = spessore.
+const ZINE = { w: 0.3, d: 0.4, t: 0.035, cover: 0.006 } as const;
 
-// 3 copertine impilate "alla rinfusa" come una pila di albi spillati: non un
-// parallelepipedo perfetto, ogni albo leggermente sfalsato e ruotato. Le y
-// sono calcolate per appoggiarsi l'una sull'altra senza compenetrare.
-// Colori più VIVIDI del giro precedente (task 18, feedback utente): oltre al
-// color diffuse ogni copertina neon ha ora un emissive proprio (stessa tinta,
-// intensità moderata) — legge come "acceso"/punchy anche sotto il rig luci
-// piuttosto neutro della Canvas, non solo più saturo sulla carta.
-const COVERS = [
-  {
-    size: [0.46, 0.055, 0.34] as const,
-    pos: [0, 0, 0] as const,
-    rotY: 0,
-    rotZ: -0.05,
-    color: '#ff1670',
-    emissive: '#ff0054',
-    emissiveIntensity: 0.55,
-  },
-  {
-    size: [0.42, 0.05, 0.31] as const,
-    pos: [0.035, 0.052, -0.018] as const,
-    rotY: 0.12,
-    rotZ: 0.09,
-    color: '#1bffe0',
-    emissive: '#00f5d4',
-    emissiveIntensity: 0.6,
-  },
-  {
-    size: [0.44, 0.045, 0.32] as const,
-    pos: [-0.025, 0.1, 0.012] as const,
-    rotY: -0.18,
-    rotZ: -0.13,
-    color: '#0a0a0a',
-    emissive: '#000000',
-    emissiveIntensity: 0,
-  },
+// Sfalsamento "alla rinfusa" per posizione nella pila (dal basso): ogni albo
+// leggermente spostato e ruotato, le y impilano senza compenetrare.
+const JITTER = [
+  { x: 0, z: 0, rotY: 0.08 },
+  { x: 0.03, z: -0.02, rotY: -0.14 },
+  { x: -0.02, z: 0.015, rotY: 0.2 },
 ];
+const STEP = ZINE.t + ZINE.cover * 2 + 0.004;
+
+// Ultime 3 uscite, la più recente in cima: nuove fanzine in data/fanzines.ts
+// compaiono qui senza toccare il componente.
+const STACK = fanzines.slice(-3);
+
+// Pila inclinata verso la camera (frontale, z=4): da sdraiata si vedevano
+// solo i bordi, così le copertine si leggono. La rotazione idle/flourish gira
+// DENTRO questo tilt → la pila ruota nel proprio piano, copertine sempre verso
+// chi guarda.
+const TILT_X = 0.95;
 
 // Durata del flourish ostentato al click: spin grosso (2 giri pieni) + pop di
 // scala, poi la navigazione. 0.5s sta nel range richiesto (0.4-0.6s) ed è
@@ -97,10 +81,6 @@ export function FanzineIcon({
   const flourishing = useRef(false);
   const flourishStart = useRef<number | null>(null);
   const flourishBaseRotation = useRef(0);
-
-  // memo puro (nessuna geometria custom da ricreare): evita di ricalcolare
-  // l'array a ogni render, coerente con lo stile di IslandScene.
-  const covers = useMemo(() => COVERS, []);
 
   // rete di sicurezza: se il componente sparisce (smonta) mentre il cursore
   // è ancora "pointer" (es. click che naviga via, o scale-out del finale
@@ -195,30 +175,71 @@ export function FanzineIcon({
         document.body.style.cursor = 'auto';
       }}
     >
-      {/* <Center>: ricentra i figli sul proprio pivot (bbox center a runtime,
-          calcolato una volta al mount) — vedi nota "FIX" in cima al file.
-          `ref={visual}` è il group ESTERNO di Center: ruotarlo/scalarlo
-          pivota correttamente sul centro visivo della pila, non sull'origine
-          arbitraria in cui sono state autorate le mesh sfalsate. */}
-      <Center ref={visual}>
-        {covers.map((c, i) => (
-          <mesh key={i} position={c.pos} rotation={[0, c.rotY, c.rotZ]}>
-            <boxGeometry args={c.size} />
-            <meshStandardMaterial
-              color={c.color}
-              emissive={c.emissive}
-              emissiveIntensity={c.emissiveIntensity}
-              {...FLAT}
-            />
-          </mesh>
-        ))}
-        {/* bollino acido in cima, come un timbro appiccicato di sbieco — più
-            acceso: emissive stessa tinta per un verde acido che "spara" */}
-        <mesh position={[0.11, 0.1285, 0.075]} rotation={[0, -0.18, 0.5]}>
-          <boxGeometry args={[0.1, 0.012, 0.1]} />
-          <meshStandardMaterial color="#9bff1a" emissive="#8cff00" emissiveIntensity={0.7} {...FLAT} />
+      <group rotation={[TILT_X, 0, 0]}>
+        {/* <Center>: ricentra i figli sul proprio pivot (bbox center a runtime,
+            calcolato una volta al mount) — vedi nota "FIX" in cima al file.
+            `ref={visual}` è il group ESTERNO di Center: ruotarlo/scalarlo
+            pivota correttamente sul centro visivo della pila, non sull'origine
+            arbitraria in cui sono state autorate le mesh sfalsate. */}
+        <Center ref={visual}>
+          {STACK.map((fz, i) => {
+            const j = JITTER[i % JITTER.length];
+            return (
+              <group key={fz.href} position={[j.x, i * STEP, j.z]} rotation={[0, j.rotY, 0]}>
+                <Zine cover={fz.cover} accent={fz.accent} />
+              </group>
+            );
+          })}
+        </Center>
+      </group>
+    </group>
+  );
+}
+
+function Zine({ cover, accent }: { cover: string; accent: string }) {
+  const map = useTexture(cover);
+  map.colorSpace = THREE.SRGBColorSpace;
+  map.anisotropy = 8;
+  const { w, d, t, cover: c } = ZINE;
+  const top = t / 2 + c / 2;
+
+  return (
+    <group>
+      {/* blocco pagine: carta avorio, si vede solo sui bordi */}
+      <mesh>
+        <boxGeometry args={[w - 0.012, t, d - 0.012]} />
+        <meshStandardMaterial color="#f3efe4" />
+      </mesh>
+      {/* copertina: faccia +y (material-2) = immagine, resto = tinta neon.
+          emissiveMap sulla stessa immagine: legge "accesa" sul palco nero
+          anche col rig luci neutro, come gli emissive del giro precedente. */}
+      <mesh position={[0, top, 0]}>
+        <boxGeometry args={[w, c, d]} />
+        {[0, 1, 2, 3, 4, 5].map((f) =>
+          f === 2 ? (
+            <meshStandardMaterial key={f} attach={`material-${f}`} map={map} emissive="#ffffff" emissiveMap={map} emissiveIntensity={0.35} roughness={0.7} />
+          ) : (
+            <meshStandardMaterial key={f} attach={`material-${f}`} color={accent} emissive={accent} emissiveIntensity={0.5} />
+          ),
+        )}
+      </mesh>
+      {/* retro */}
+      <mesh position={[0, -top, 0]}>
+        <boxGeometry args={[w, c, d]} />
+        <meshStandardMaterial color={accent} emissive={accent} emissiveIntensity={0.5} />
+      </mesh>
+      {/* dorso piegato sul lato sinistro */}
+      <mesh position={[-w / 2, 0, 0]}>
+        <boxGeometry args={[0.012, t + c * 2, d]} />
+        <meshStandardMaterial color={accent} emissive={accent} emissiveIntensity={0.5} />
+      </mesh>
+      {/* due punti metallici sulla copertina, vicino al dorso */}
+      {[-d / 4, d / 4].map((z) => (
+        <mesh key={z} position={[-w / 2 + 0.018, top + c / 2 + 0.001, z]}>
+          <boxGeometry args={[0.006, 0.003, 0.05]} />
+          <meshStandardMaterial color="#d8d8d8" metalness={0.9} roughness={0.25} />
         </mesh>
-      </Center>
+      ))}
     </group>
   );
 }

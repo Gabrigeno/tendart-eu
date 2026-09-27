@@ -173,7 +173,16 @@ export default function FanzineReader({ fz }: { fz: Fanzine }) {
               file={fz.pdf}
               onLoadSuccess={({ numPages }) => setNumPages(numPages)}
               onLoadError={() => setFailed(true)}
-              loading={<p className="text-gray-500 text-sm animate-pulse">Un secondo che carica…</p>}
+              loading={
+                // copertina segnaposto dove comparirà la prima pagina del libro (a destra con
+                // due pagine, centrata con una): anteprima mentre il PDF carica e punto
+                // d'arrivo della copertina che "vola" dalla Library (view-transition-name)
+                <div className={`flex ${size.single ? "justify-center" : "justify-end"}`} style={{ width: size.single ? size.w : size.w * 2 }}>
+                  <div className="bg-white flex items-center" style={{ width: size.w, height: size.h, viewTransitionName: "zine-cover" }}>
+                    <img src={fz.cover} alt="" className="w-full h-full object-contain" />
+                  </div>
+                </div>
+              }
             >
               {numPages > 0 && (
                 <CurrentPage.Provider value={page}>

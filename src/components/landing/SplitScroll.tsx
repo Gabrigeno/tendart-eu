@@ -1,11 +1,12 @@
 import { Suspense, useCallback, useLayoutEffect, useMemo, useRef, useState } from 'react';
-import { Canvas, useThree } from '@react-three/fiber';
+import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { Float, PresentationControls } from '@react-three/drei';
-import type { Group } from 'three';
+import type { AmbientLight, Group } from 'three';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { Link } from 'react-router-dom';
-import { IslandScene } from './IslandScene';
+import { IslandScene, nightState } from './IslandScene';
+import { NightSky } from './NightSky';
 import { FanzineIcon } from './FanzineIcon';
 
 gsap.registerPlugin(ScrollTrigger);
@@ -74,6 +75,15 @@ function IslandRig({ reducedMotion, onGroup }: { reducedMotion: boolean; onGroup
   );
 }
 
+// luce ambiente che cala col buio: il falò (che intanto cresce) resta la fonte calda
+function NightAmbient() {
+  const ref = useRef<AmbientLight>(null);
+  useFrame(() => {
+    if (ref.current) ref.current.intensity = 0.8 - nightState.value * 0.3;
+  });
+  return <ambientLight ref={ref} intensity={0.8} />;
+}
+
 function StageCanvas({
   reducedMotion,
   onGroup,
@@ -115,7 +125,7 @@ function StageCanvas({
         }}
       >
         {/* rig tarato per la scena flat-shaded: colori cartoon accesi senza slavarli */}
-        <ambientLight intensity={0.8} />
+        <NightAmbient />
         <directionalLight position={[3, 4, 5]} intensity={1.6} />
         <directionalLight position={[-3, 1, -2]} intensity={0.35} color="#00f5d4" />
         <pointLight position={[-3, -1.5, -2.5]} intensity={0.25} color="#ff0054" decay={0} />
@@ -413,6 +423,11 @@ export default function SplitScroll({ sections }: { sections: SplitSection[] }) 
       // sosta finale: il recap+CTA resta in scena prima dello sblocco del pin
       tl.to({}, { duration: HOLD }, t + FTRANS);
 
+      // notte che cala lungo tutto il palco: cielo+stelle (solo opacità) e falò via nightState
+      const sky = root.current?.querySelector<HTMLElement>('.night-sky');
+      if (sky) tl.fromTo(sky, { opacity: 0 }, { opacity: 1, duration: t + FTRANS, ease: 'none' }, 0);
+      tl.fromTo(nightState, { value: 0 }, { value: 1, duration: t + FTRANS, ease: 'none' }, 0);
+
       // affordance di scroll: invito "scorri" fino alla prima transizione, poi la
       // linea di avanzamento sul bordo destro dice quanto manca
       const hint = root.current?.querySelector<HTMLElement>('.split-hint');
@@ -433,6 +448,7 @@ export default function SplitScroll({ sections }: { sections: SplitSection[] }) 
     return (
       <section ref={root} className="relative bg-black">
         <div className="relative h-[60vh] w-full overflow-hidden">
+          <NightSky className="opacity-50" />
           <StageCanvas reducedMotion onGroup={setScrollGroup} />
         </div>
         <div className="grid gap-14 px-8 pb-20 pt-6 md:grid-cols-2 md:px-14">
@@ -460,6 +476,8 @@ export default function SplitScroll({ sections }: { sections: SplitSection[] }) 
           schermo, isola al centro, testi in overlay assoluto che si
           materializzano sul posto (autoAlpha + micro-scale, MAI translate y). */}
       <div ref={stageRef} className="relative h-screen w-full overflow-hidden bg-black">
+        {/* cielo notturno: sotto al canvas (trasparente), opacità dalla timeline */}
+        <NightSky className="opacity-0" />
         <StageCanvas
           reducedMotion={false}
           onGroup={setScrollGroup}

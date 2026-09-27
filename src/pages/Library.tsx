@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { ArrowBackIcon } from "@/components/ui/icons/akar-icons-arrow-back";
+import { Link } from "react-router-dom";
 import { fanzines } from "@/data/fanzines";
 import ArrowButton from "@/components/ArrowButton";
 
@@ -108,12 +109,20 @@ export default function Library() {
           style={{ perspective: '1200px', paddingInline: 'calc(50% - min(30vw, 150px))' }}
         >
           {fanzines.map((fz, i) => (
-            <a
+            <Link
               key={fz.href}
-              href={fz.href}
+              to={fz.href}
+              // la copertina a fuoco "vola" nel lettore (View Transitions, dove supportate)
+              viewTransition
               aria-label={fz.title}
               className="snap-center shrink-0 relative block w-[60vw] max-w-[300px]"
-              style={{ transformStyle: 'preserve-3d' }}
+              style={{
+                transformStyle: 'preserve-3d',
+                // stesso nome della copertina segnaposto del lettore (unico: solo l'albo a fuoco).
+                // Sull'albo intero, non sulla sola copertina: vola via tutto l'oggetto e nel
+                // carosello non resta il retro scoperto
+                viewTransitionName: i === active ? 'zine-cover' : undefined,
+              }}
               onClick={(e) => {
                 // Copertina laterale: prima la porto al centro, il click successivo apre
                 if (i !== active) {
@@ -161,7 +170,7 @@ export default function Library() {
                 {/* scurimento copertine laterali (--dim dallo scroll) */}
                 <div className="absolute inset-0 bg-black pointer-events-none" style={{ opacity: 'var(--dim, 0)' }} />
               </div>
-            </a>
+            </Link>
           ))}
         </div>
 

@@ -261,3 +261,28 @@ button:focus-visible {
     }
   }
 }
+
+/* Copertina che vola dalla Library al lettore (View Transitions via <Link viewTransition>) */
+::view-transition-group(zine-cover) {
+  animation-duration: 0.55s;
+  animation-timing-function: cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+/* le due copertine hanno proporzioni diverse (carosello ~0.88, pagina A5 ~0.71):
+   entrambe contenute e centrate nel riquadro che si trasforma, così l'illustrazione
+   resta sovrapposta durante la dissolvenza */
+::view-transition-old(zine-cover),
+::view-transition-new(zine-cover) {
+  height: 100%;
+  object-fit: contain;
+}
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 0.35s;
+}
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation: none !important;
+  }
+}

@@ -110,6 +110,11 @@ function Tent() {
   );
 }
 
+// "notte che cala" 0 → 1, animata dalla timeline di scroll (SplitScroll) e letta a ogni
+// frame da falò e luci. ponytail: stato modulo condiviso, c'è una sola isola in scena;
+// se mai ce ne fossero due, passarlo come prop/context.
+export const nightState = { value: 0 };
+
 function Campfire({ reducedMotion }: { reducedMotion: boolean }) {
   const fireRef = useRef<THREE.Group>(null);
   const lightRef = useRef<THREE.PointLight>(null);
@@ -131,7 +136,10 @@ function Campfire({ reducedMotion }: { reducedMotion: boolean }) {
     if (reducedMotion || !fireRef.current || !lightRef.current) return;
     const t = state.clock.elapsedTime;
     const f = Math.sin(t * 11) * 0.5 + Math.sin(t * 23 + 1.7) * 0.3 + Math.sin(t * 5.3 + 0.4) * 0.2;
-    lightRef.current.intensity = 1.8 + f * 0.7;
+    // col calare della notte il falò scalda e illumina più lontano
+    const n = nightState.value;
+    lightRef.current.intensity = 1.8 + n * 1.7 + f * (0.7 + n * 0.3);
+    lightRef.current.distance = 2.2 + n * 1.4;
     fireRef.current.scale.setScalar(1 + f * 0.06);
   });
 

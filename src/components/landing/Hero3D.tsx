@@ -99,7 +99,7 @@ export default function Hero3D() {
           <PresentationControls global snap speed={1.4} polar={[-0.6, 0.6]} azimuth={[-1, 1]}>
             <ResponsiveGroup>
               {/* ondeggiamento lento da logo di menu; fermo con reduced-motion */}
-              <Float speed={REDUCED ? 0 : 1.6} rotationIntensity={REDUCED ? 0 : 0.35} floatIntensity={REDUCED ? 0 : 0.5}>
+              <Float speed={REDUCED ? 0 : 2} rotationIntensity={REDUCED ? 0 : 0.6} floatIntensity={REDUCED ? 0 : 1.6} floatingRange={[-0.15, 0.15]}>
                 <NeonLogo />
               </Float>
             </ResponsiveGroup>

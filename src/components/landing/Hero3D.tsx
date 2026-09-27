@@ -1,6 +1,6 @@
 import { Suspense, useMemo } from 'react';
 import { Canvas, useLoader, useThree } from '@react-three/fiber';
-import { Center, PresentationControls } from '@react-three/drei';
+import { Center, Float, PresentationControls } from '@react-three/drei';
 import { SVGLoader } from 'three/examples/jsm/loaders/SVGLoader.js';
 import * as THREE from 'three';
 import HeroBackdrop from './HeroBackdrop';
@@ -17,33 +17,33 @@ export function webglAvailable(): boolean {
 // Scala il testo in base alla larghezza viewport (mobile: scritta più piccola)
 function ResponsiveGroup({ children }: { children: React.ReactNode }) {
   const { viewport } = useThree();
-  const scale = Math.min(1, viewport.width / 9);
+  const scale = Math.min(0.65, viewport.width / 6.8);
   return <group scale={scale}>{children}</group>;
 }
 
+// Logo low-poly come il resto del sito (isola flat-shaded, "gioco PS2"): curve a pochi
+// segmenti = lettere sfaccettate, smusso a una sola faccia, due materiali (fronte acceso,
+// fianchi scuri) così lo spessore si legge come un logo da schermata del titolo.
 function NeonLogo() {
   const svg = useLoader(SVGLoader, '/tendart-logo.svg');
   const geometry = useMemo(() => {
     const shapes = svg.paths.flatMap((p) => SVGLoader.createShapes(p));
     return new THREE.ExtrudeGeometry(shapes, {
-      depth: 60,
+      depth: 70,
       bevelEnabled: true,
-      bevelSize: 4,
-      bevelThickness: 5,
-      curveSegments: 8,
+      bevelSize: 5,
+      bevelThickness: 6,
+      bevelSegments: 1,
+      curveSegments: 2,
     });
   }, [svg]);
   return (
     <Center>
-      {/* SVG ha Y verso il basso: scala Y negativa per raddrizzare */}
+      {/* SVG ha Y verso il basso: scala Y negativa per raddrizzare.
+          ExtrudeGeometry: gruppo 0 = facce fronte/retro, gruppo 1 = fianchi */}
       <mesh geometry={geometry} scale={[0.006, -0.006, 0.006]}>
-        <meshStandardMaterial
-          color="#ff0054"
-          emissive="#ff0054"
-          emissiveIntensity={0.2}
-          metalness={0.3}
-          roughness={0.25}
-        />
+        <meshStandardMaterial attach="material-0" color="#ff1f66" emissive="#ff0054" emissiveIntensity={0.3} roughness={0.55} flatShading />
+        <meshStandardMaterial attach="material-1" color="#b3144a" emissive="#5a0025" emissiveIntensity={0.55} roughness={0.7} flatShading />
       </mesh>
     </Center>
   );
@@ -56,6 +56,8 @@ function ScrollHint() {
     </div>
   );
 }
+
+const REDUCED = typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 // dal nero al blu notte: in fondo è esattamente il colore d'apertura del crepuscolo
 // (NightSky .sky-dusk, #03061a), così hero e sezione isola si fondono senza stacco
@@ -93,7 +95,10 @@ export default function Hero3D() {
         <Suspense fallback={null}>
           <PresentationControls global snap speed={1.4} polar={[-0.6, 0.6]} azimuth={[-1, 1]}>
             <ResponsiveGroup>
-              <NeonLogo />
+              {/* ondeggiamento lento da logo di menu; fermo con reduced-motion */}
+              <Float speed={REDUCED ? 0 : 1.6} rotationIntensity={REDUCED ? 0 : 0.35} floatIntensity={REDUCED ? 0 : 0.5}>
+                <NeonLogo />
+              </Float>
             </ResponsiveGroup>
           </PresentationControls>
         </Suspense>

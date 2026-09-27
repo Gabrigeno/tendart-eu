@@ -13,6 +13,7 @@ gsap.registerPlugin(ScrollTrigger);
 
 interface SplitSection {
   key: string;
+  href: string;
   title: string;
   text: string;
   accent: string;
@@ -223,12 +224,11 @@ function FinaleBlocks({ sections, onIconTrigger }: { sections: SplitSection[]; o
   return (
     <>
       {sections.map((s, i) => (
-        // blocco intero cliccabile (area di click = tutta la didascalia), freccia minimal
-        // accanto al titolo. Link ancora MOCK: le pagine di sezione non esistono ancora.
-        <a
+        // blocco intero cliccabile verso la pagina di sezione (area di click = tutta la
+        // didascalia), freccia minimal accanto al titolo
+        <Link
           key={s.key}
-          href="#"
-          onClick={(e) => e.preventDefault()}
+          to={s.href}
           aria-label={s.title}
           className={`group pointer-events-auto absolute block ${FINALE_POS[i % FINALE_POS.length]}`}
         >
@@ -245,7 +245,7 @@ function FinaleBlocks({ sections, onIconTrigger }: { sections: SplitSection[]; o
           >
             {s.text}
           </p>
-        </a>
+        </Link>
       ))}
       {/* CTA testuale centrata: l'icona 3D (x=-0.22 in world units, poco a
           sinistra dell'origine) proietta appena a sinistra del centro nella

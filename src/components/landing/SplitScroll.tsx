@@ -107,6 +107,9 @@ function StageCanvas({
       />
       <Canvas
         camera={{ position: [0, 0, 4], fov: 40 }}
+        // densità pixel limitata: sui telefoni dpr 3 raddoppia il lavoro della GPU per
+        // un guadagno invisibile su una scena flat-shaded
+        dpr={[1, 1.5]}
         onCreated={({ gl }) => {
           gl.domElement.style.touchAction = 'pan-y';
         }}
@@ -142,13 +145,13 @@ function Caption({ section }: { section: SplitSection }) {
   return (
     <>
       <h2
-        className="split-title text-bbh text-5xl font-extrabold uppercase md:text-7xl"
+        className="split-title text-bbh text-4xl font-extrabold uppercase md:text-7xl"
         style={{ color: section.accent, textShadow: '4px 4px 0 #000' }}
       >
         {section.title}
       </h2>
       <p
-        className="split-text text-sora mt-6 max-w-md text-lg text-white md:text-xl"
+        className="split-text text-sora mt-3 max-w-md text-base text-white md:mt-6 md:text-xl"
         style={{ textShadow: '0 2px 14px rgba(0,0,0,0.9), 0 0 4px rgba(0,0,0,0.8)' }}
       >
         {section.text}
@@ -298,6 +301,10 @@ export default function SplitScroll({ sections }: { sections: SplitSection[] }) 
       // scala a riposo dell'icona fanzine 3D: piccola, un accento accanto
       // alla CTA — non deve competere con l'isola per attenzione.
       const FANZINE_SCALE = 0.62;
+      // su mobile i testi stanno in basso: l'isola sale per non finirci sotto,
+      // e torna al centro nella transizione finale (il finale è radiale).
+      const LIFT = mobile ? 0.35 : 0;
+      gsap.set(g.position, { y: LIFT });
 
       // Un solo palco pinnato: tutto il viaggio (N sezioni + sosta finale
       // recap+CTA) avviene dentro questo viewport, lo scrub lega la
@@ -363,6 +370,7 @@ export default function SplitScroll({ sections }: { sections: SplitSection[] }) 
         .to(g.rotation, { y: Math.PI * 2, duration: FTRANS, ease: 'power2.inOut' }, t)
         .to(g.position, { z: FBACK, duration: FTRANS / 2, ease: 'power2.in' }, t)
         .to(g.position, { z: 0, duration: FTRANS / 2, ease: 'power2.out' }, t + FTRANS / 2)
+        .to(g.position, { y: 0, duration: FTRANS, ease: 'power2.inOut' }, t)
         .to(g.scale, { x: SHRINK, y: SHRINK, z: SHRINK, duration: FTRANS / 2, ease: 'power2.in' }, t)
         // il rientro NON torna a scala piena: si ferma a FINAL_SCALE per fare
         // spazio ai 4 blocchi radiali del finale attorno all'isola (concesso
@@ -404,6 +412,17 @@ export default function SplitScroll({ sections }: { sections: SplitSection[] }) 
       }
       // sosta finale: il recap+CTA resta in scena prima dello sblocco del pin
       tl.to({}, { duration: HOLD }, t + FTRANS);
+
+      // affordance di scroll: invito "scorri" fino alla prima transizione, poi la
+      // linea di avanzamento sul bordo destro dice quanto manca
+      const hint = root.current?.querySelector<HTMLElement>('.split-hint');
+      const progress = root.current?.querySelector<HTMLElement>('.split-progress');
+      if (hint) tl.to(hint, { autoAlpha: 0, duration: 0.3 }, INTRO + HOLD);
+      if (progress) tl.fromTo(progress, { scaleY: 0 }, { scaleY: 1, duration: t + FTRANS * 0.5, ease: 'none' }, 0);
+      // nel finale radiale sfumatura e barra coprirebbero icona fanzine e testi di destra
+      const scrim = root.current?.querySelector<HTMLElement>('.split-scrim');
+      const track = progress?.parentElement;
+      [scrim, track].forEach((el) => el && tl.to(el, { autoAlpha: 0, duration: FTRANS * 0.3 }, t + FTRANS * 0.4));
     });
     return () => mm.revert();
   }, [reducedMotion, scrollGroup, fanzineGroup, sections.length]);
@@ -447,19 +466,32 @@ export default function SplitScroll({ sections }: { sections: SplitSection[] }) 
           onFanzineGroup={setFanzineGroup}
           onIconReady={handleIconReady}
         />
+        {/* sfumatura statica dal basso (solo mobile) sotto i testi: niente blur */}
+        <div className="split-scrim pointer-events-none absolute inset-x-0 bottom-0 z-[5] h-[48%] bg-gradient-to-t from-black via-black/75 to-transparent md:hidden" />
+        {/* avanzamento del palco: linea sottile sul bordo destro, riempita dalla timeline */}
+        <div className="pointer-events-none absolute right-3 top-1/2 z-10 h-32 w-[2px] -translate-y-1/2 bg-white/15 md:right-6 md:h-48">
+          <div className="split-progress h-full w-full origin-top scale-y-0 bg-white/80" />
+        </div>
+        {/* invito a scorrere: sparisce alla prima transizione */}
+        <div className="split-hint text-sora pointer-events-none absolute inset-x-0 bottom-4 z-10 flex flex-col items-center gap-1 text-[11px] uppercase tracking-[0.3em] text-white/70 md:bottom-8">
+          scorri
+          <span className="animate-bounce text-base leading-none">↓</span>
+        </div>
         {sections.map((s, i) => (
           <div
             key={s.key}
             // pointer-events-none: il drag della PresentationControls deve
             // funzionare anche sopra l'area del testo.
-            className={`pointer-events-none absolute inset-x-0 bottom-8 z-10 mx-auto w-[90%] max-w-md md:inset-x-auto md:bottom-auto md:top-1/2 md:mx-0 md:w-auto md:max-w-sm md:-translate-y-1/2 ${
+            className={`pointer-events-none absolute inset-x-0 bottom-16 z-10 mx-auto w-[88%] max-w-md md:inset-x-auto md:bottom-auto md:top-1/2 md:mx-0 md:w-auto md:max-w-sm md:-translate-y-1/2 ${
               i % 2 === 0 ? 'md:left-[6%]' : 'md:right-[6%]'
             }`}
           >
             {/* elemento animato separato dal wrapper posizionato: gsap tocca
                 solo questo (autoAlpha/scale), il translate Tailwind resta suo.
-                Su mobile un velo scuro dietro il testo per la leggibilità. */}
-            <div className="split-caption invisible rounded-2xl bg-black/55 p-5 opacity-0 backdrop-blur-sm md:bg-transparent md:p-0 md:backdrop-blur-none">
+                Niente pannello/backdrop-blur: su mobile il blur sopra il canvas
+                animato ricalcolava a ogni frame (scatti). Leggibilità dalla
+                sfumatura fissa .split-scrim + ombre del testo. */}
+            <div className="split-caption invisible opacity-0">
               <Caption section={s} />
             </div>
           </div>

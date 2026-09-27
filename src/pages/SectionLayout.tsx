@@ -5,6 +5,7 @@ import { NightSky } from '@/components/landing/NightSky';
 import Footer from '@/components/Footer';
 import SectionPanel from '@/components/sections/SectionPanel';
 import SectionPhotos from '@/components/sections/SectionPhotos';
+import SectionStage from '@/components/sections/SectionStage';
 import { sections, type Section } from '@/data/sections';
 
 // Layout route delle 4 sezioni: resta montata passando da una all'altra (le route figlie
@@ -33,6 +34,7 @@ export default function SectionLayout() {
       {/* stage fisso dietro a tutto: cielo + canvas dell'isola */}
       <div data-stage className="fixed inset-0 -z-10">
         <NightSky dusk={0} night={1} />
+        <SectionStage section={section} />
       </div>
 
       <Link

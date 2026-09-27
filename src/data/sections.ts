@@ -45,10 +45,10 @@ export const sections: Section[] = [
     place: 'La tenda',
     body: LOREM,
     photos: photosFor(0),
-    marker: [-1.05, 1.05, 0.35],
+    marker: [-1.05, 1.25, 0.35],
     camera: {
-      desktop: { position: [0.6, 1.3, 2.6], target: [-0.35, 0.45, 0.35] },
-      mobile: { position: [-0.55, 0.6, 1.9], target: [-1.05, 0.45, 0.35] },
+      desktop: { position: [0.35, 1.4, 2.95], target: [-0.55, 0.5, 0.35] },
+      mobile: { position: [-0.6, 0.75, 2.95], target: [-1.0, 0.25, 0.35] },
     },
   },
   {
@@ -60,10 +60,10 @@ export const sections: Section[] = [
     place: 'Le rocce',
     body: LOREM,
     photos: photosFor(1),
-    marker: [0.95, 0.95, -0.42],
+    marker: [0.95, 1.05, -0.42],
     camera: {
-      desktop: { position: [2.3, 1.2, 1.6], target: [1.55, 0.35, -0.42] },
-      mobile: { position: [1.25, 0.5, 0.75], target: [0.95, 0.35, -0.42] },
+      desktop: { position: [2.05, 1.3, 2.18], target: [1.45, 0.4, -0.42] },
+      mobile: { position: [1.6, 0.8, 2.7], target: [0.95, 0.25, -0.42] },
     },
   },
   {
@@ -75,10 +75,10 @@ export const sections: Section[] = [
     place: 'Gli alberi',
     body: LOREM,
     photos: photosFor(2),
-    marker: [-0.45, 1.95, -1.0],
+    marker: [-0.45, 2.1, -1.0],
     camera: {
-      desktop: { position: [0.9, 1.6, 1.4], target: [0.2, 1.0, -1.0] },
-      mobile: { position: [-0.2, 0.8, 0.35], target: [-0.45, 1.05, -1.0] },
+      desktop: { position: [0.75, 1.25, 2.7], target: [0.1, 1.0, -1.0] },
+      mobile: { position: [-0.1, 1.0, 2.9], target: [-0.45, 0.55, -1.0] },
     },
   },
   {
@@ -90,10 +90,10 @@ export const sections: Section[] = [
     place: 'Il falò',
     body: LOREM,
     photos: photosFor(3),
-    marker: [-0.1, 1.05, 0.55],
+    marker: [-0.1, 1.2, 0.55],
     camera: {
-      desktop: { position: [1.2, 1.1, 2.3], target: [0.5, 0.4, 0.55] },
-      mobile: { position: [0.25, 0.5, 1.55], target: [-0.1, 0.4, 0.55] },
+      desktop: { position: [1.0, 1.3, 2.95], target: [0.4, 0.55, 0.55] },
+      mobile: { position: [0.3, 0.7, 3.0], target: [-0.1, 0.15, 0.55] },
     },
   },
 ];

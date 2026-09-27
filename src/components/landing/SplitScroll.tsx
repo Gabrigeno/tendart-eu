@@ -7,6 +7,7 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { Link } from 'react-router-dom';
 import { IslandScene, nightState } from './IslandScene';
 import { NightSky } from './NightSky';
+import { PROPONITI_URL } from '@/data/sections';
 import { FanzineIcon } from './FanzineIcon';
 
 gsap.registerPlugin(ScrollTrigger);
@@ -251,8 +252,17 @@ function FinaleBlocks({ sections, onIconTrigger }: { sections: SplitSection[]; o
           sinistra dell'origine) proietta appena a sinistra del centro nella
           stessa fascia verticale — il link centrato le sta "accanto" con un
           piccolo margine, non sparso all'altro capo dello schermo. */}
-      <div className="absolute inset-x-0 bottom-[6%] flex justify-center md:bottom-[7%]">
+      <div className="absolute inset-x-0 bottom-[6%] flex flex-col items-center gap-2 md:bottom-[7%]">
         <FanzineCtaLink onTrigger={onIconTrigger} />
+        {/* invito per artisti e band: Google Form esterno */}
+        <a
+          href={PROPONITI_URL}
+          {...(PROPONITI_URL.startsWith('http') ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
+          className="text-sora pointer-events-auto text-xs tracking-wide !text-white/70 transition-colors hover:!text-white"
+          style={{ textShadow: '0 2px 10px rgba(0,0,0,0.9)' }}
+        >
+          Vuoi esporre o suonare? <span className="underline underline-offset-4">Proponiti →</span>
+        </a>
       </div>
     </>
   );

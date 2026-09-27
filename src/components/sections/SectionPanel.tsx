@@ -64,6 +64,8 @@ export default function SectionPanel({
             <a
               key={l.label}
               href={l.href}
+              // link esterni (es. Google Form) in nuova scheda
+              {...(l.href.startsWith('http') ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
               className="text-sora border px-4 py-2 text-xs font-bold uppercase tracking-[0.2em] !text-white transition-colors hover:!text-black hover:[background:var(--c)]"
               style={{ borderColor: section.accent, '--c': section.accent } as React.CSSProperties}
             >

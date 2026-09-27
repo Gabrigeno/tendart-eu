@@ -41,6 +41,11 @@ const LOREM_LONG = [
   'Donec lobortis risus a elit. Etiam tempor. Ut ullamcorper, ligula eu tempor congue, eros est euismod turpis, id tincidunt sapien risus a quam. Maecenas fermentum consequat mi.',
 ];
 
+// Candidature di artisti e band: Google Form del collettivo (link esterno, nuova scheda).
+// TODO contenuti: segnaposto finché il collettivo non crea il Form; incollare qui l'URL.
+export const PROPONITI_URL = '#';
+const PROPONITI = { label: 'Proponiti', href: PROPONITI_URL };
+
 // inquadratura larga da cui parte il volo all'arrivo sulla pagina
 export const WIDE_VIEW: CameraView = { position: [0, 3.4, 6.2], target: [0, 0.2, 0] };
 
@@ -71,6 +76,7 @@ export const sections: Section[] = [
     text: 'Esposizioni indipendenti, spazi non convenzionali, artisti emergenti.',
     accent: '#ff0054',
     body: LOREM,
+    links: [PROPONITI],
     photos: photosFor(1),
     marker: [0.95, 1.05, -0.42],
     camera: {
@@ -85,6 +91,7 @@ export const sections: Section[] = [
     text: 'Serate, performance, incontri. Dove succede qualcosa, ci siamo.',
     accent: '#8cff00',
     body: LOREM,
+    links: [PROPONITI],
     photos: photosFor(2),
     marker: [-0.45, 2.1, -1.0],
     camera: {
@@ -99,6 +106,7 @@ export const sections: Section[] = [
     text: 'Live, rumore, palchi veri. La musica come la vogliamo noi.',
     accent: '#00f5d4',
     body: LOREM,
+    links: [PROPONITI],
     photos: photosFor(3),
     marker: [-0.1, 1.2, 0.55],
     camera: {

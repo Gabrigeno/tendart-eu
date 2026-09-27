@@ -58,7 +58,7 @@ export default function SectionLayout() {
       <div className="relative flex min-h-screen items-end px-4 pb-6 pt-[62vh] md:items-center md:justify-end md:px-[6%] md:py-16">
         {/* sfumatura sotto al pannello su mobile: niente blur */}
         <div className="pointer-events-none absolute inset-x-0 bottom-0 h-[55%] bg-gradient-to-t from-black via-black/70 to-transparent md:hidden" />
-        <div className="relative w-full md:max-w-md">
+        <div className="relative w-full md:max-w-lg">
           <SectionPanel section={section} index={index} total={sections.length} prev={prev} next={next} onGo={go} />
         </div>
       </div>

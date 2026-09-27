@@ -10,8 +10,9 @@ export type Section = {
   title: string;
   text: string;
   accent: string;
-  place: string;
   body: string[];
+  // link in fondo al testo (es. statuto e manifesto in Chi siamo)
+  links?: { label: string; href: string }[];
   photos: string[];
   marker: [number, number, number];
   camera: { desktop: CameraView; mobile: CameraView };
@@ -32,6 +33,14 @@ const LOREM = [
   'Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse.',
 ];
 
+// Chi siamo avrà un testo molto più lungo: segnaposto più corposo per tarare l'impaginazione
+const LOREM_LONG = [
+  ...LOREM,
+  'Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum. Curabitur pretium tincidunt lacus, nulla gravida orci a odio.',
+  'Nullam varius, turpis et commodo pharetra, est eros bibendum elit, nec luctus magna felis sollicitudin mauris. Integer in mauris eu nibh euismod gravida. Duis ac tellus et risus vulputate vehicula.',
+  'Donec lobortis risus a elit. Etiam tempor. Ut ullamcorper, ligula eu tempor congue, eros est euismod turpis, id tincidunt sapien risus a quam. Maecenas fermentum consequat mi.',
+];
+
 // inquadratura larga da cui parte il volo all'arrivo sulla pagina
 export const WIDE_VIEW: CameraView = { position: [0, 3.4, 6.2], target: [0, 0.2, 0] };
 
@@ -42,8 +51,12 @@ export const sections: Section[] = [
     title: 'Chi siamo',
     text: 'Tendart è un collettivo di promozione artistica. Mostre, eventi, concerti: facciamo spazio a chi ha qualcosa da dire.',
     accent: '#00f5d4',
-    place: 'La tenda',
-    body: LOREM,
+    body: LOREM_LONG,
+    // TODO contenuti: href provvisori, da sostituire con i link/PDF veri di statuto e manifesto
+    links: [
+      { label: 'Statuto', href: '#' },
+      { label: 'Manifesto', href: '#' },
+    ],
     photos: photosFor(0),
     marker: [-1.05, 1.25, 0.35],
     camera: {
@@ -57,7 +70,6 @@ export const sections: Section[] = [
     title: 'Mostre',
     text: 'Esposizioni indipendenti, spazi non convenzionali, artisti emergenti.',
     accent: '#ff0054',
-    place: 'Le rocce',
     body: LOREM,
     photos: photosFor(1),
     marker: [0.95, 1.05, -0.42],
@@ -72,7 +84,6 @@ export const sections: Section[] = [
     title: 'Eventi',
     text: 'Serate, performance, incontri. Dove succede qualcosa, ci siamo.',
     accent: '#8cff00',
-    place: 'Gli alberi',
     body: LOREM,
     photos: photosFor(2),
     marker: [-0.45, 2.1, -1.0],
@@ -87,7 +98,6 @@ export const sections: Section[] = [
     title: 'Concerti',
     text: 'Live, rumore, palchi veri. La musica come la vogliamo noi.',
     accent: '#00f5d4',
-    place: 'Il falò',
     body: LOREM,
     photos: photosFor(3),
     marker: [-0.1, 1.2, 0.55],

@@ -46,7 +46,7 @@ export default function SectionPanel({
           style={{ borderColor: `${section.accent}55`, clipPath: CHAMFER }}
         />
         <p data-reveal className="text-sora text-[11px] uppercase tracking-[0.3em]" style={{ color: section.accent }}>
-          ◆ {pad(index + 1)} / {pad(total)} · {section.place}
+          ◆ {pad(index + 1)} / {pad(total)}
         </p>
         <h1
           data-reveal
@@ -62,6 +62,20 @@ export default function SectionPanel({
             </p>
           ))}
         </div>
+        {section.links && (
+          <div data-reveal className="mt-6 flex flex-wrap gap-3">
+            {section.links.map((l) => (
+              <a
+                key={l.label}
+                href={l.href}
+                className="text-sora border px-4 py-2 text-xs font-bold uppercase tracking-[0.2em] !text-white transition-colors hover:!text-black hover:[background:var(--c)]"
+                style={{ borderColor: section.accent, '--c': section.accent } as React.CSSProperties}
+              >
+                ▸ {l.label}
+              </a>
+            ))}
+          </div>
+        )}
         {/* riga frecce esclusa dal reveal: nascosta anche un istante perderebbe il focus */}
         <div className="text-sora mt-6 flex items-center justify-between text-xs text-gray-400">
           <span className="flex items-center gap-1">

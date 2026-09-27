@@ -3,10 +3,13 @@ import gsap from 'gsap';
 import ArrowButton from '@/components/ArrowButton';
 import type { Section } from '@/data/sections';
 
-// Riquadro stile menu PS2: pannello blu notte quasi opaco (niente blur sopra il canvas),
-// doppio filo nel colore della sezione, angoli tagliati a smusso.
-const CHAMFER =
-  'polygon(14px 0, calc(100% - 14px) 0, 100% 14px, 100% calc(100% - 14px), calc(100% - 14px) 100%, 14px 100%, 0 calc(100% - 14px), 0 14px)';
+// Riquadro neutro: lastra nera quasi opaca (niente blur sopra il canvas), bordo grigio
+// sottile. Il 3D viene da un'estrusione: ombre grigie impilate e sfalsate in basso a
+// destra (una "lastra" spessa), più un filo di luce sul bordo alto.
+const EXTRUDE = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+  .map((i) => `${i}px ${i}px 0 rgb(${62 - i * 3},${62 - i * 3},${68 - i * 3})`)
+  .concat('14px 16px 24px rgba(0,0,0,.55)', 'inset 0 1px 0 rgba(255,255,255,.1)')
+  .join(', ');
 
 export default function SectionPanel({
   section,
@@ -37,56 +40,48 @@ export default function SectionPanel({
 
   const pad = (n: number) => String(n).padStart(2, '0');
   return (
-    // filo esterno = sfondo accento dietro al pannello interno, entrambi smussati
-    <div className="p-[2px]" style={{ background: section.accent, clipPath: CHAMFER }}>
-      <div ref={body} className="relative bg-[#070b22]/95 p-6 md:p-8" style={{ clipPath: CHAMFER }}>
-        {/* filo interno sottile */}
-        <div
-          className="pointer-events-none absolute inset-[6px] border"
-          style={{ borderColor: `${section.accent}55`, clipPath: CHAMFER }}
-        />
-        <p data-reveal className="text-sora text-[11px] uppercase tracking-[0.3em]" style={{ color: section.accent }}>
-          ◆ {pad(index + 1)} / {pad(total)}
-        </p>
-        <h1
-          data-reveal
-          className="text-bbh mt-3 !text-4xl uppercase !leading-none md:!text-6xl"
-          style={{ color: section.accent, textShadow: `0 0 18px ${section.accent}88, 3px 3px 0 #000` }}
-        >
-          {section.title}
-        </h1>
-        <div className="text-sora mt-5 space-y-3 text-sm leading-relaxed text-white/85 md:text-base">
-          {section.body.map((para, i) => (
-            <p key={i} data-reveal>
-              {para}
-            </p>
+    <div ref={body} className="relative border border-white/15 bg-[#0a0a0c]/95 p-6 md:p-8" style={{ boxShadow: EXTRUDE }}>
+      <p data-reveal className="text-sora text-[11px] uppercase tracking-[0.3em]" style={{ color: section.accent }}>
+        ◆ {pad(index + 1)} / {pad(total)}
+      </p>
+      <h1
+        data-reveal
+        className="text-bbh mt-3 !text-4xl uppercase !leading-none md:!text-6xl"
+        style={{ color: section.accent, textShadow: `0 0 18px ${section.accent}88, 3px 3px 0 #000` }}
+      >
+        {section.title}
+      </h1>
+      <div className="text-sora mt-5 space-y-3 text-sm leading-relaxed text-white/85 md:text-base">
+        {section.body.map((para, i) => (
+          <p key={i} data-reveal>
+            {para}
+          </p>
+        ))}
+      </div>
+      {section.links && (
+        <div data-reveal className="mt-6 flex flex-wrap gap-3">
+          {section.links.map((l) => (
+            <a
+              key={l.label}
+              href={l.href}
+              className="text-sora border px-4 py-2 text-xs font-bold uppercase tracking-[0.2em] !text-white transition-colors hover:!text-black hover:[background:var(--c)]"
+              style={{ borderColor: section.accent, '--c': section.accent } as React.CSSProperties}
+            >
+              ▸ {l.label}
+            </a>
           ))}
         </div>
-        {section.links && (
-          <div data-reveal className="mt-6 flex flex-wrap gap-3">
-            {section.links.map((l) => (
-              <a
-                key={l.label}
-                href={l.href}
-                className="text-sora border px-4 py-2 text-xs font-bold uppercase tracking-[0.2em] !text-white transition-colors hover:!text-black hover:[background:var(--c)]"
-                style={{ borderColor: section.accent, '--c': section.accent } as React.CSSProperties}
-              >
-                ▸ {l.label}
-              </a>
-            ))}
-          </div>
-        )}
-        {/* riga frecce esclusa dal reveal: nascosta anche un istante perderebbe il focus */}
-        <div className="text-sora mt-6 flex items-center justify-between text-xs text-gray-400">
-          <span className="flex items-center gap-1">
-            <ArrowButton dir="prev" label="Sezione precedente" accent={section.accent} disabled={!prev} onClick={() => prev && onGo(prev)} />
-            {prev?.title}
-          </span>
-          <span className="flex items-center gap-1">
-            {next?.title}
-            <ArrowButton dir="next" label="Sezione successiva" accent={section.accent} disabled={!next} onClick={() => next && onGo(next)} />
-          </span>
-        </div>
+      )}
+      {/* riga frecce esclusa dal reveal: nascosta anche un istante perderebbe il focus */}
+      <div className="text-sora mt-6 flex items-center justify-between text-xs text-gray-400">
+        <span className="flex items-center gap-1">
+          <ArrowButton dir="prev" label="Sezione precedente" accent={section.accent} disabled={!prev} onClick={() => prev && onGo(prev)} />
+          {prev?.title}
+        </span>
+        <span className="flex items-center gap-1">
+          {next?.title}
+          <ArrowButton dir="next" label="Sezione successiva" accent={section.accent} disabled={!next} onClick={() => next && onGo(next)} />
+        </span>
       </div>
     </div>
   );

@@ -21,29 +21,29 @@ function ResponsiveGroup({ children }: { children: React.ReactNode }) {
   return <group scale={scale}>{children}</group>;
 }
 
-// Logo low-poly come il resto del sito (isola flat-shaded, "gioco PS2"): curve a pochi
-// segmenti = lettere sfaccettate, smusso a una sola faccia, due materiali (fronte acceso,
-// fianchi scuri) così lo spessore si legge come un logo da schermata del titolo.
+// Logo estruso a curve morbide, due materiali (fronte acceso, fianchi più scuri) così lo
+// spessore si legge come un logo da schermata del titolo.
 function NeonLogo() {
   const svg = useLoader(SVGLoader, '/tendart-logo.svg');
   const geometry = useMemo(() => {
     const shapes = svg.paths.flatMap((p) => SVGLoader.createShapes(p));
     return new THREE.ExtrudeGeometry(shapes, {
-      depth: 70,
+      depth: 60,
       bevelEnabled: true,
-      bevelSize: 5,
-      bevelThickness: 6,
-      bevelSegments: 1,
-      curveSegments: 2,
+      bevelSize: 4,
+      bevelThickness: 5,
+      curveSegments: 8,
     });
   }, [svg]);
   return (
     <Center>
       {/* SVG ha Y verso il basso: scala Y negativa per raddrizzare.
-          ExtrudeGeometry: gruppo 0 = facce fronte/retro, gruppo 1 = fianchi */}
+          ExtrudeGeometry: gruppo 0 = facce fronte/retro, gruppo 1 = fianchi.
+          Fianchi DoubleSide: le pareti interne dei buchi (D, A, R) escono con la normale
+          invertita e verrebbero scartate, lasciando la D "bucata" invece che scavata */}
       <mesh geometry={geometry} scale={[0.006, -0.006, 0.006]}>
-        <meshStandardMaterial attach="material-0" color="#ff1f66" emissive="#ff0054" emissiveIntensity={0.3} roughness={0.55} flatShading />
-        <meshStandardMaterial attach="material-1" color="#b3144a" emissive="#5a0025" emissiveIntensity={0.55} roughness={0.7} flatShading />
+        <meshStandardMaterial attach="material-0" color="#ff1f66" emissive="#ff0054" emissiveIntensity={0.3} roughness={0.3} metalness={0.2} />
+        <meshStandardMaterial attach="material-1" color="#b3144a" emissive="#5a0025" emissiveIntensity={0.55} roughness={0.45} metalness={0.2} side={THREE.DoubleSide} />
       </mesh>
     </Center>
   );

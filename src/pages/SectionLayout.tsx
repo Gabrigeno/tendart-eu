@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from 'react';
+import { useEffect, useLayoutEffect, useMemo } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { ArrowBackIcon } from '@/components/ui/icons/akar-icons-arrow-back';
 import { NightSky } from '@/components/landing/NightSky';
@@ -21,6 +21,12 @@ export default function SectionLayout() {
   const go = (s: Section) => navigate(s.href);
   // senza WebGL: solo cielo, riquadro e foto (stesso criterio della hero)
   const has3D = useMemo(() => webglAvailable(), []);
+
+  // arrivando da un'altra pagina (es. il finale della landing, ~5000px più giù) la
+  // posizione di scroll si porterebbe dietro: si parte dal riquadro, in cima
+  useLayoutEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -53,7 +59,7 @@ export default function SectionLayout() {
         {/* sfumatura sotto al pannello su mobile: niente blur */}
         <div className="pointer-events-none absolute inset-x-0 bottom-0 h-[55%] bg-gradient-to-t from-black via-black/70 to-transparent md:hidden" />
         <div className="relative w-full md:max-w-md">
-          <SectionPanel key={section.key} section={section} index={index} total={sections.length} prev={prev} next={next} onGo={go} />
+          <SectionPanel section={section} index={index} total={sections.length} prev={prev} next={next} onGo={go} />
         </div>
       </div>
 

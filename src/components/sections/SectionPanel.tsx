@@ -25,14 +25,15 @@ export default function SectionPanel({
 }) {
   const body = useRef<HTMLDivElement>(null);
 
-  // testo a righe sfalsate all'arrivo su un posto (rimontato a ogni sezione via key)
+  // testo a righe sfalsate all'arrivo su un posto. Riparte al cambio sezione senza
+  // rimontare il pannello: le frecce restano gli stessi elementi e tengono il focus.
   useLayoutEffect(() => {
     if (!body.current || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
     const ctx = gsap.context(() => {
       gsap.from('[data-reveal]', { autoAlpha: 0, y: 8, duration: 0.35, stagger: 0.07, ease: 'power2.out', delay: 0.5 });
     }, body);
     return () => ctx.revert();
-  }, []);
+  }, [section.key]);
 
   const pad = (n: number) => String(n).padStart(2, '0');
   return (
@@ -61,7 +62,8 @@ export default function SectionPanel({
             </p>
           ))}
         </div>
-        <div data-reveal className="text-sora mt-6 flex items-center justify-between text-xs text-gray-400">
+        {/* riga frecce esclusa dal reveal: nascosta anche un istante perderebbe il focus */}
+        <div className="text-sora mt-6 flex items-center justify-between text-xs text-gray-400">
           <span className="flex items-center gap-1">
             <ArrowButton dir="prev" label="Sezione precedente" accent={section.accent} disabled={!prev} onClick={() => prev && onGo(prev)} />
             {prev?.title}

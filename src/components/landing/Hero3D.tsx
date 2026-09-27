@@ -5,7 +5,7 @@ import { SVGLoader } from 'three/examples/jsm/loaders/SVGLoader.js';
 import * as THREE from 'three';
 import HeroBackdrop from './HeroBackdrop';
 
-function webglAvailable(): boolean {
+export function webglAvailable(): boolean {
   try {
     const canvas = document.createElement('canvas');
     return !!(canvas.getContext('webgl2') || canvas.getContext('webgl'));

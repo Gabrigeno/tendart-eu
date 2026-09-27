@@ -1,7 +1,8 @@
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { ArrowBackIcon } from '@/components/ui/icons/akar-icons-arrow-back';
 import { NightSky } from '@/components/landing/NightSky';
+import { webglAvailable } from '@/components/landing/Hero3D';
 import Footer from '@/components/Footer';
 import SectionPanel from '@/components/sections/SectionPanel';
 import SectionPhotos from '@/components/sections/SectionPhotos';
@@ -18,6 +19,8 @@ export default function SectionLayout() {
   const prev = sections[index - 1];
   const next = sections[index + 1];
   const go = (s: Section) => navigate(s.href);
+  // senza WebGL: solo cielo, riquadro e foto (stesso criterio della hero)
+  const has3D = useMemo(() => webglAvailable(), []);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -34,7 +37,7 @@ export default function SectionLayout() {
       {/* stage fisso dietro a tutto: cielo + canvas dell'isola */}
       <div data-stage className="fixed inset-0 -z-10">
         <NightSky dusk={0} night={1} />
-        <SectionStage section={section} />
+        {has3D && <SectionStage section={section} />}
       </div>
 
       <Link

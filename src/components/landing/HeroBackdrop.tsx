@@ -87,7 +87,9 @@ export default function HeroBackdrop() {
             transform: `rotate(${slot.rotate}deg)`,
             opacity: reducedMotion ? 0.3 : 0,
             visibility: reducedMotion ? 'visible' : 'hidden',
-            filter: 'grayscale(1) contrast(1.5) brightness(0.55)',
+            // bicromo blu-notte morbido (non più b/n ad alto contrasto): stesso mondo
+            // cromatico del crepuscolo della sezione isola che segue
+            filter: 'grayscale(1) sepia(0.45) hue-rotate(185deg) saturate(1.5) contrast(1.05) brightness(0.62)',
           }}
         />
       ))}

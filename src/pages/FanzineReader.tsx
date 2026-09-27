@@ -6,6 +6,7 @@ import workerSrc from "pdfjs-dist/build/pdf.worker.min.mjs?url";
 import { ArrowBackIcon } from "@/components/ui/icons/akar-icons-arrow-back";
 import ArrowButton from "@/components/ArrowButton";
 import FairyLights from "@/components/FairyLights";
+import { NightSky } from "@/components/landing/NightSky";
 import type { Fanzine } from "@/data/fanzines";
 
 // worker locale, stessa versione di react-pdf (pdfjs-dist fissato in package.json)
@@ -129,6 +130,8 @@ export default function FanzineReader({ fz }: { fz: Fanzine }) {
 
   return (
     <div ref={rootRef} className="relative h-dvh w-full overflow-hidden bg-black flex flex-col items-center text-sora">
+      {/* cielo stellato come landing e Library, sotto lucine e alone */}
+      <NightSky dusk={0} night={1} />
       <FairyLights accent={fz.accent} className="absolute inset-0 w-full h-full z-0" />
       {/* alone del colore della fanzine dietro il libro */}
       <div

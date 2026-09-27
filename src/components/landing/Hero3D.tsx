@@ -57,11 +57,15 @@ function ScrollHint() {
   );
 }
 
+// dal nero al blu notte: in fondo è esattamente il colore d'apertura del crepuscolo
+// (NightSky .sky-dusk, #03061a), così hero e sezione isola si fondono senza stacco
+const HERO_BG = 'linear-gradient(180deg, #000 0%, #01020a 55%, #03061a 100%)';
+
 export default function Hero3D() {
   if (!webglAvailable()) {
     // Fallback CSS neon senza WebGL
     return (
-      <section className="relative flex h-screen w-full items-center justify-center bg-black">
+      <section className="relative flex h-screen w-full items-center justify-center" style={{ background: HERO_BG }}>
         <HeroBackdrop />
         <h1
           className="relative z-10 text-bbh text-6xl font-extrabold uppercase md:text-9xl"
@@ -75,7 +79,7 @@ export default function Hero3D() {
   }
 
   return (
-    <section className="relative h-screen w-full bg-black">
+    <section className="relative h-screen w-full" style={{ background: HERO_BG }}>
       <HeroBackdrop />
       <Canvas
         className="relative z-10"

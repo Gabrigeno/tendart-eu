@@ -423,9 +423,12 @@ export default function SplitScroll({ sections }: { sections: SplitSection[] }) 
       // sosta finale: il recap+CTA resta in scena prima dello sblocco del pin
       tl.to({}, { duration: HOLD }, t + FTRANS);
 
-      // notte che cala lungo tutto il palco: cielo+stelle (solo opacità) e falò via nightState
-      const sky = root.current?.querySelector<HTMLElement>('.night-sky');
-      if (sky) tl.fromTo(sky, { opacity: 0 }, { opacity: 1, duration: t + FTRANS, ease: 'none' }, 0);
+      // dal tramonto alla notte lungo tutto il palco: il blu da tramonto sfuma nei primi due
+      // terzi, la notte stellata sale per tutto il percorso (solo opacità); falò via nightState
+      const dusk = root.current?.querySelector<HTMLElement>('.sky-dusk');
+      const night = root.current?.querySelector<HTMLElement>('.sky-night');
+      if (dusk) tl.fromTo(dusk, { opacity: 1 }, { opacity: 0, duration: (t + FTRANS) * 0.7, ease: 'sine.inOut' }, 0);
+      if (night) tl.fromTo(night, { opacity: 0 }, { opacity: 1, duration: t + FTRANS, ease: 'sine.in' }, 0);
       tl.fromTo(nightState, { value: 0 }, { value: 1, duration: t + FTRANS, ease: 'none' }, 0);
 
       // affordance di scroll: invito "scorri" fino alla prima transizione, poi la
@@ -448,7 +451,7 @@ export default function SplitScroll({ sections }: { sections: SplitSection[] }) 
     return (
       <section ref={root} className="relative bg-black">
         <div className="relative h-[60vh] w-full overflow-hidden">
-          <NightSky className="opacity-50" />
+          <NightSky dusk={0.5} night={0.5} />
           <StageCanvas reducedMotion onGroup={setScrollGroup} />
         </div>
         <div className="grid gap-14 px-8 pb-20 pt-6 md:grid-cols-2 md:px-14">
@@ -476,8 +479,8 @@ export default function SplitScroll({ sections }: { sections: SplitSection[] }) 
           schermo, isola al centro, testi in overlay assoluto che si
           materializzano sul posto (autoAlpha + micro-scale, MAI translate y). */}
       <div ref={stageRef} className="relative h-screen w-full overflow-hidden bg-black">
-        {/* cielo notturno: sotto al canvas (trasparente), opacità dalla timeline */}
-        <NightSky className="opacity-0" />
+        {/* cielo tramonto → notte: sotto al canvas (trasparente), opacità dalla timeline */}
+        <NightSky />
         <StageCanvas
           reducedMotion={false}
           onGroup={setScrollGroup}

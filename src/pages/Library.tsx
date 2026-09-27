@@ -3,6 +3,7 @@ import { ArrowBackIcon } from "@/components/ui/icons/akar-icons-arrow-back";
 import { Link } from "react-router-dom";
 import { fanzines } from "@/data/fanzines";
 import ArrowButton from "@/components/ArrowButton";
+import { NightSky } from "@/components/landing/NightSky";
 
 // spessore albo (px) per taglio pagine / dorso / retro
 const ZINE_T = 12;
@@ -67,7 +68,11 @@ export default function Library() {
   };
 
   return (
-    <div className="relative w-full min-h-screen flex flex-col items-center overflow-hidden bg-black px-4 py-8 md:py-12">
+    <div className="relative isolate w-full min-h-screen flex flex-col items-center overflow-hidden bg-black px-4 py-8 md:py-12">
+      {/* stesso cielo stellato della sezione isola (solo notte), dietro a tutto */}
+      <div className="absolute inset-0 -z-10">
+        <NightSky dusk={0} night={1} />
+      </div>
       <a
         href="/"
         aria-label="Torna alla home"

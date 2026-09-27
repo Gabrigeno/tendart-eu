@@ -166,26 +166,13 @@ function Caption({ section }: { section: SplitSection }) {
       >
         {section.text}
       </p>
-      {/* CTA per-sezione, per ora MOCK (nessuna destinazione): affordance vera
-          — colore accent, hover underline — ma il click non naviga. Dentro la
-          .split-caption, quindi si materializza col resto del testo; il
-          wrapper è pointer-events-none, qui si riattiva SOLO il link. */}
-      <a
-        href="#"
-        onClick={(e) => e.preventDefault()}
-        className="text-sora pointer-events-auto mt-5 inline-block text-sm font-bold uppercase tracking-widest hover:underline"
-        style={{ color: section.accent, textShadow: '0 2px 10px rgba(0,0,0,0.9)' }}
-      >
-        Scopri di più →
-      </a>
     </>
   );
 }
 
 // CTA fanzine del finale (semplificata da feedback utente, task 18): niente
-// più heading/bottone bordati — solo il link testuale, stesso trattamento
-// visivo del mock "Scopri di più →" sotto le caption (stessa classe/colore/
-// dimensione), ma QUESTO è funzionale davvero. Se `onTrigger` è passato
+// più heading/bottone bordati — solo il link testuale, maiuscolo spaziato
+// in accento. Se `onTrigger` è passato
 // (palco animato, icona presente) il click fa partire il flourish
 // sull'icona 3D e la navigazione avviene al suo completamento; senza
 // `onTrigger` (fallback reduced-motion, icona omessa) è un <Link> normale
@@ -236,12 +223,21 @@ function FinaleBlocks({ sections, onIconTrigger }: { sections: SplitSection[]; o
   return (
     <>
       {sections.map((s, i) => (
-        <div key={s.key} className={`absolute ${FINALE_POS[i % FINALE_POS.length]}`}>
+        // blocco intero cliccabile (area di click = tutta la didascalia), freccia minimal
+        // accanto al titolo. Link ancora MOCK: le pagine di sezione non esistono ancora.
+        <a
+          key={s.key}
+          href="#"
+          onClick={(e) => e.preventDefault()}
+          aria-label={s.title}
+          className={`group pointer-events-auto absolute block ${FINALE_POS[i % FINALE_POS.length]}`}
+        >
           <h3
             className="text-bbh text-xl font-extrabold uppercase md:text-3xl"
             style={{ color: s.accent, textShadow: '2px 2px 0 #000' }}
           >
             {s.title}
+            <span className="ml-2 inline-block text-base transition-transform duration-200 group-hover:translate-x-1 md:text-xl">→</span>
           </h3>
           <p
             className="text-sora mt-1 text-xs text-white/95 md:mt-2 md:text-sm"
@@ -249,7 +245,7 @@ function FinaleBlocks({ sections, onIconTrigger }: { sections: SplitSection[]; o
           >
             {s.text}
           </p>
-        </div>
+        </a>
       ))}
       {/* CTA testuale centrata: l'icona 3D (x=-0.22 in world units, poco a
           sinistra dell'origine) proietta appena a sinistra del centro nella
